@@ -74,7 +74,7 @@ This image provides various versions that are available via tags. `latest` tag u
     
       pdns-auth-master:
         container_name: pdns-auth-master
-        image: emil-jacero/powerdns-auth-gpgsql:amd64_4.1.x
+        image: emil-jacero/powerdns-auth-gpgsql:amd64-4.1.x
         restart: always
         depends_on:
           - db-pdns-auth-master
@@ -130,7 +130,7 @@ This image provides various versions that are available via tags. `latest` tag u
     
       pdns-auth-slave:
         container_name: pdns-auth-slave
-        image: emil-jacero/powerdns-auth-gpgsql:amd64_4.1.x
+        image: emil-jacero/powerdns-auth-gpgsql:amd64-4.1.x
         restart: always
         depends_on:
           - db-pdns-auth-slave
