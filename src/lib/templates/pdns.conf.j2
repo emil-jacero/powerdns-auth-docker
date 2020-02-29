@@ -1,0 +1,25 @@
+launch=gpgsql
+gpgsql-host={{ PDNS_PGSQL_HOST }}
+gpgsql-port={{ PDNS_PGSQL_PORT }}
+gpgsql-dbname={{ PDNS_PGSQL_DBNAME }}
+gpgsql-user={{ PDNS_PGSQL_USER }}
+gpgsql-password={{ PDNS_PGSQL_PASSWORD }}
+gpgsql-dnssec={{ ENV_PDNS_DNSSEC|default("no", true) }}
+webserver=yes
+webserver-address=0.0.0.0
+webserver-allow-from=0.0.0.0/0
+webserver-port={{ ENV_PDNS_API_PORT }}
+api=yes
+api-key={{ ENV_PDNS_API_KEY }}
+socket-dir=/var/run/pdns
+
+{% if ENV_PDNS_MODE == "MASTER" -%}
+master=yes
+allow-axfr-ips={{ ENV_PDNS_AXFR_IPS }}
+also-notify={{ ENV_PDNS_AXFR_IPS }}
+default-soa-edit=INCEPTION-INCREMENT
+{% endif -%}
+
+{% if ENV_PDNS_MODE == "SLAVE" -%}
+master=no
+{% endif -%}
