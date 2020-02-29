@@ -8,8 +8,8 @@ ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 RUN apt update && apt install -y ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip && apt -y upgrade
 
 # Create build arguments with sane defaults
-ARG PDNS_VERSION_LONG=4.1.0
-ARG PDNS_VERSION=41
+ARG PDNS_VERSION_LONG=4.2.0
+ARG PDNS_VERSION=42
 # Adding POWERDNS_VERSION environment variable with the value from
 # PDNS_VERSION_LONG build argument to ensure it stays :)
 # NOTE: DO NOT OVERWRITE THIS VARIABLE... EVER!
