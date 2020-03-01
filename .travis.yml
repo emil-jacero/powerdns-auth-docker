@@ -12,16 +12,9 @@ env:
 script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker build --tag "$IMAGE_NAME" .
+  - docker tag "$IMAGE_NAME" "${IMAGE_NAME}:amd64-latest"
+  - docker tag "$IMAGE_NAME" "${IMAGE_NAME}:${IMAGE_TAG}"
+  - docker push "${IMAGE_NAME}:amd64-latest" && docker push "${IMAGE_NAME}:${IMAGE_TAG}"
 
 after_script:
   - docker images
-
-before_deploy:
-  - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-  - docker tag "$IMAGE_NAME" "${IMAGE_NAME}:amd64-latest"
-  - docker tag "$IMAGE_NAME" "${IMAGE_NAME}:${IMAGE_TAG}"
-deploy:
-  provider: script
-  script: docker push "${IMAGE_NAME}:amd64-latest" && docker push "${IMAGE_NAME}:${IMAGE_TAG}"
-  on:
-    branch: master
