@@ -1,6 +1,7 @@
+[![GitHub license](https://img.shields.io/github/license/emil-jacero/powerdns-auth-docker)](https://github.com/emil-jacero/powerdns-auth-docker/blob/master/LICENSE) [![GitHub stars](https://img.shields.io/github/stars/emil-jacero/powerdns-auth-docker)](https://github.com/emil-jacero/powerdns-auth-docker/stargazers) [![GitHub issues](https://img.shields.io/github/issues/emil-jacero/powerdns-auth-docker)](https://github.com/emil-jacero/powerdns-auth-docker/issues)
+
 # powerdns-auth-docker
 This is a PowerDNS authoritative docker image designed to handle minor and major updates seamlessly.
-
 
 ## Supported Architectures
 The images are built and tested on multiple platforms.
