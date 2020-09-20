@@ -24,7 +24,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-p
 
 # Installing python modules
 ADD requirements.txt /
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.amd64.txt
 
 ENV TZ=Europe/Stockholm
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
