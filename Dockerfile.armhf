@@ -23,7 +23,7 @@ RUN wget -O- https://repo.powerdns.com/FD380FBB-pub.asc | apt-key add - && apt-g
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-pgsql postgresql-client
 
 # Installing python modules
-ADD requirements.txt /
+ADD requirements.armhf.txt /
 RUN pip3 install -r requirements.armhf.txt
 
 ENV TZ=Europe/Stockholm
