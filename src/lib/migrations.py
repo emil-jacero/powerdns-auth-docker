@@ -7,6 +7,10 @@ import subprocess
 from packaging import version
 from lib.logger import create_logger
 
+'''
+    SQL migration DDL's are copied from upstream powerdns
+    https://github.com/PowerDNS/pdns/tree/master/modules/gpgsqlbackend
+'''
 
 # Create logger
 log = create_logger(name='migrations')

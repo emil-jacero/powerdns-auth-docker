@@ -5,11 +5,11 @@ MAINTAINER Emil Larsson <emil@jacero.se>
 ENV DEBIAN_FRONTEND=noninteractive
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 
-RUN apt update && apt install -y ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip && apt -y upgrade
+RUN apt update && apt install -y ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip tzdata && apt -y upgrade
 
 # Create build arguments with sane defaults
-ARG PDNS_VERSION_LONG=4.2.0
-ARG PDNS_VERSION=42
+ARG PDNS_VERSION_LONG
+ARG PDNS_VERSION
 # Adding POWERDNS_VERSION environment variable with the value from
 # PDNS_VERSION_LONG build argument to ensure it stays :)
 # NOTE: DO NOT OVERWRITE THIS VARIABLE... EVER!
@@ -25,6 +25,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-p
 # Installing python modules
 ADD requirements.txt /
 RUN pip3 install -r requirements.txt
+
+ENV TZ=Europe/Stockholm
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ADD src /app
 
