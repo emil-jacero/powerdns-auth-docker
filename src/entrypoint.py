@@ -5,31 +5,29 @@ import sys
 import psycopg2
 import time
 import subprocess
-from lib.config import config
-from lib.logger import create_logger
-from lib.template import render_template
+import logging
+
+from lib.logger import logger
+from lib.config import Config
+from lib.template import Template
 from lib.migrations import PSQL, Migration, run_migrations
 
 
-# Create logger
-log = create_logger(name='entrypoint')
+logger_name = f'{Config.logger_name}.entrypoint'
+log = logging.getLogger(logger_name)
 
 
 # Init Config and Migration
-config = config()
+config = Config()
 mig = Migration(config)
 script_path = os.path.dirname(os.path.realpath(__file__))
 sql_upgrade_scripts = os.path.join(script_path, 'sql_upgrade_scripts')
 sql_schemas = os.path.join(script_path, 'sql_schemas')
 
 
-def wait_for_db():
+def wait_for_db(user, password, host, port):
     try:
-        conn_string = f"user={config['PDNS_PGSQL_USER']} " \
-                      f"host={config['PDNS_PGSQL_HOST']} " \
-                      f"port={config['PDNS_PGSQL_PORT']} " \
-                      f"password={config['PDNS_PGSQL_PASSWORD']} " \
-                      f"connect_timeout=1"
+        conn_string = f"host={host} port={port} user={user} password={password} connect_timeout=1"
         conn = psycopg2.connect(conn_string)
         conn.close()
         return True
@@ -53,19 +51,16 @@ def has_existing_data(table_name):
 
 
 # Write configuration files
-try:
-    dev = os.environ['DEV']
-except:
-    dev = "false"
-if dev == "true":
-    render_template("pdns.conf.j2", "./pdns.conf_test", config)
-else:
-    render_template("pdns.conf.j2", "/etc/powerdns/pdns.conf", config)
+renderer = Template("pdns.conf.j2")
+renderer.render_template("/etc/powerdns/pdns.conf", config.get_envs_for_template(config.get_extra_envs()))
 
 
 # Wait for DB
-while wait_for_db() is False:
-    log.info(f"Waiting for postgres at: {config['PDNS_PGSQL_HOST']}:{config['PDNS_PGSQL_PORT']}")
+while wait_for_db(user=config.pgsql_user,
+                  password=config.pgsql_password,
+                  host=config.pgsql_host,
+                  port=config.pgsql_port) is False:
+    log.info(f"Waiting for postgres at: {config.pgsql_host}:{config.pgsql_port}")
     time.sleep(2)
 
 
@@ -78,17 +73,21 @@ if has_existing_data("records") is False:
     mig.execute_sql_schema(sql_schema_path)
     mig.execute_sql_schema(create_metadata_table)
 else:
-    log.info("Database already exists")
+    log.info("Database already exists!")
 
 
 # Run migrations
-if config['ENV_PDNS_MODE'] == "MASTER":
-    run_migrations(mig, sql_upgrade_scripts)
-elif config['ENV_PDNS_MODE'] == "SLAVE":
+if config.pdns_run_mode == "MASTER":
+    run_migrations(mig, sql_upgrade_scripts, config.get_pdns_version())
+elif config.pdns_run_mode == "SLAVE":
     update_supermaster = os.path.join(sql_schemas, 'update_supermaster.sql')
-    render_template("update_supermaster.sql.j2", update_supermaster, config)
+    renderer = Template("update_supermaster.sql.j2")
+    renderer.render_template(update_supermaster, config.get_envs_for_template(config.get_extra_envs()))
     mig.execute_sql_schema(update_supermaster)
-    run_migrations(mig, sql_upgrade_scripts)
+    run_migrations(mig, sql_upgrade_scripts, config.get_pdns_version())
+else:
+    log.error(f"The environment variable 'ENV_PDNS_MODE' must be set to either MASTER or SLAVE")
+    sys.exit(1)
 
 
 # Launch PowerDNS

@@ -1,17 +1,19 @@
-#!/usr/bin/env python3
-
 import logging
 
-def create_logger(name="default_logger"):
-    log = logging.getLogger(name)
-    log.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)7s - [%(funcName)s] %(message)s')
+from lib.config import Config
 
-    # Create Streamhandler, outputting to stdout
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
+config = Config()
 
-    #log.info("Start logging!")
-    return log
+
+logger = logging.getLogger(config.logger_name)
+logger.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler()
+handler.setLevel(config.logging_level)
+
+# Get formatter
+formatter = Config.formatter
+# Set formatter
+handler.setFormatter(formatter)
+# Add the handlers to the logger
+logger.addHandler(handler)
