@@ -12,6 +12,7 @@ The images are built and tested on multiple platforms.
 | :----: | --- |
 | x86-64 | amd64-latest |
 | arm64 | arm64v8-latest |
+| armv7l | armhf-latest |
 
 ## Version Tags
 
@@ -20,11 +21,17 @@ This image provides various versions that are available via tags. `latest` tag p
 | Tag | Description |
 | :----: | --- |
 | amd64-latest | Latest stable version |
+| amd64-4.4.x | Latest micro release of 4.4 |
+| amd64-4.3.x | Latest micro release of 4.3 |
 | amd64-4.2.x | Latest micro release of 4.2 |
-| amd64-4.1.x | Latest micro release of 4.1 |
 | arm64v8-latest | Latest stable version |
+| arm64v8-4.4.x | Latest micro release of 4.4 |
+| arm64v8-4.3.x | Latest micro release of 4.3 |
 | arm64v8-4.2.x | Latest micro release of 4.2 |
-| arm64v8-4.1.x | Latest micro release of 4.1 |
+| armhf-latest | Latest stable version |
+| armhf-4.4.x | Latest micro release of 4.4 |
+| armhf-4.3.x | Latest micro release of 4.3 |
+| armhf-4.2.x | Latest micro release of 4.2 |
 
 ## Environment variables
 | Name | Value | Default |
@@ -55,7 +62,7 @@ This image provides various versions that are available via tags. `latest` tag p
 ## Usage
 ### Example Master
 ```
-    version: '3.1'
+    version: '3'
     
     volumes:
       db-pdns-auth-master:
@@ -115,7 +122,7 @@ This image provides various versions that are available via tags. `latest` tag p
 
 ### Example Slave
 ```
-    version: '3.1'
+    version: '3'
     
     volumes:
       db-pdns-auth-slave:

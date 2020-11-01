@@ -4,16 +4,17 @@ import os
 import sys
 import psycopg2
 import subprocess
+import logging
 from packaging import version
-from lib.logger import create_logger
+from lib.config import Config
 
 '''
     SQL migration DDL's are copied from upstream powerdns
     https://github.com/PowerDNS/pdns/tree/master/modules/gpgsqlbackend
 '''
 
-# Create logger
-log = create_logger(name='migrations')
+logger_name = f'{Config.logger_name}.migrations'
+log = logging.getLogger(logger_name)
 
 
 def parse_sql_schema_filename(filename):
@@ -25,12 +26,13 @@ def parse_sql_schema_filename(filename):
 class PSQL:
     # TODO: Implement config file. Grab all settings needed from config file
     def __init__(self, config, silent=False):
+        self._logger = logging.getLogger(f'{logger_name}.{self.__class__.__name__}')
         self.silent = silent
-        self.pdns_pgsql_dbname = config['PDNS_PGSQL_DBNAME']
-        self.pdns_pgsql_user = config['PDNS_PGSQL_USER']
-        self.pdns_pgsql_password = config['PDNS_PGSQL_PASSWORD']
-        self.pdns_pgsql_host = config['PDNS_PGSQL_HOST']
-        self.pdns_pgsql_port = config['PDNS_PGSQL_PORT']
+        self.pdns_pgsql_dbname = config.pgsql_dbname
+        self.pdns_pgsql_user = config.pgsql_user
+        self.pdns_pgsql_password = config.pgsql_password
+        self.pdns_pgsql_host = config.pgsql_host
+        self.pdns_pgsql_port = config.pgsql_port
 
         self.conn_obj = None
         self.cursor_obj = None
@@ -43,11 +45,11 @@ class PSQL:
                                             user={self.pdns_pgsql_user} \
                                             password={self.pdns_pgsql_password}")
             if not self.silent:
-                log.debug(f"Connected to database [{self.pdns_pgsql_dbname}]")
+                self._logger.debug(f"Connected to database [{self.pdns_pgsql_dbname}]")
             return conn
         except Exception as error:
-            log.error(f"Unable to connect to the database [{self.pdns_pgsql_dbname}]")
-            log.error(error)
+            self._logger.error(f"Unable to connect to the database [{self.pdns_pgsql_dbname}]")
+            self._logger.error(error)
 
     def cursor_create(self):
         self.conn_obj = self.connection()
@@ -58,28 +60,30 @@ class PSQL:
         try:
             self.cursor_obj.close()
             if not self.silent:
-                log.debug("Cursor closed")
+                self._logger.debug("Cursor closed")
         except Exception as error:
-            log.error(error)
+            self._logger.error(error)
         try:
             self.conn_obj.close()
             if not self.silent:
-                log.debug("Connection Closed")
+                self._logger.debug("Connection Closed")
         except Exception as error:
-            log.error(error)
+            self._logger.error(error)
 
     def commit(self):
-        log.debug(f"Committing SQL query [{self.cursor_obj.query}]")
+        self._logger.debug(f"Committing SQL query [{self.cursor_obj.query}]")
         self.conn_obj.commit()
 
     def rollback(self):
-        log.debug(f"Rolling back SQL query [{self.cursor_obj.query}]")
+        self._logger.debug(f"Rolling back SQL query [{self.cursor_obj.query}]")
         self.conn_obj.rollback()
 
 
 class Migration:
     def __init__(self, config):
         self.config = config
+        #self._logger = logging.getLogger(f'{logger_name}.{self.__class__.__name__}')
+        self._logger = log
 
     def single_query(self, query, silent):
         """
@@ -109,7 +113,7 @@ class Migration:
             return record
 
         except TypeError as error:
-            log.error(error)
+            self._logger.error(error)
             return None
 
     def bump_pdns_db_version(self, new_version, old_version):
@@ -121,14 +125,13 @@ class Migration:
             conn = PSQL(self.config)
             cursor = conn.cursor_create()
             query = f"update pdns_meta set db_version='{new_version}', db_version_previous='{old_version}' where db_version='{old_version}'"
+            self._logger.debug(f'Bumping DB version: [{old_version} -> {new_version}]')
             cursor.execute(query)
             conn.commit()
-
         except (Exception, psycopg2.DatabaseError) as error:
             conn.rollback()
+            self._logger.error(f"Was unable to bump the version number to the latest! [{old_version} -> {new_version}]")
             raise (f"Was unable to bump the version number to the latest! [{old_version} -> {new_version}]")
-            raise error
-
         finally:
             if conn is not None:
                 conn.close_all()
@@ -144,10 +147,10 @@ class Migration:
                 cursor.execute(open(file_path, "r").read())
             conn.commit()
             self.bump_pdns_db_version(new_version, old_version)
-            log.info(f"Upgrade success!")
-
+            self._logger.info(f"Upgrade success!")
         except (Exception, psycopg2.DatabaseError) as error:
             conn.rollback()
+            self._logger.error(f'Unable to migrate: File: {file_path}')
             raise error
 
         finally:
@@ -155,16 +158,13 @@ class Migration:
                 conn.close_all()
 
     def execute_sql_schema(self, file_path):
-        """
-            Install fresh DB
-        """
         conn = None
         try:
             conn = PSQL(self.config)
             with conn.cursor_create() as cursor:
                 cursor.execute(open(file_path, "r").read())
             conn.commit()
-            log.info(f"SQL success!")
+            #self._logger.info(f"SQL success!")
 
         except (Exception, psycopg2.DatabaseError) as error:
             conn.rollback()
@@ -175,15 +175,16 @@ class Migration:
                 conn.close_all()
 
 
-def run_migrations(mig, sql_schemas_path):
-    try:
-        # Grab PowerDNS version from env. DO NOT OVERWRITE THIS ENV VARIABLE!
-        pdns_version = os.environ['POWERDNS_VERSION']
-    except Exception as error:
-        log.error(f"Unable to get or missing environment variable.")
-        log.error(error)
-        sys.exit(1)
+def convert_version_name(name):
+    result = None
+    name = str(name)
+    if len(name) == 2:
+        # Good to continue
+        result = f'{name[0]}.{name[1]}.0'
+    return result
 
+
+def run_migrations(mig, sql_schemas_path, pdns_version):
     if pdns_version is None or pdns_version == "":
         log.error("Missing value from PowerDNS. Should be something like '4.1.0'")
         log.info("Cannot continue... Killing!")
@@ -207,6 +208,8 @@ def run_migrations(mig, sql_schemas_path):
         for dir_path, subdir_list, file_list in os.walk(sql_schemas_path):
             for filename in file_list:
                 schema_old, schema_new = parse_sql_schema_filename(filename)
+                log.debug(f'Old schema version: {schema_old}')
+                log.debug(f'New schema version: {schema_new}')
                 # Compare the major & minor versions of the running instances and the sql upgrade scripts
                 # located at "sql_upgrade_scripts".
                 if (version_pdns_db.minor == schema_old.minor) and \
@@ -217,6 +220,7 @@ def run_migrations(mig, sql_schemas_path):
                         full_path = os.path.join(dir_path, filename)
                         log.info(f"Upgrading from {schema_old} to {schema_new}")
                         # TODO: Implement better error handling
+                        log.debug('RUNNING MIGRATION!')
                         mig.run_migration(full_path, schema_old, schema_new)
                     except Exception as error:
                         log.error(error)

@@ -1,29 +1,59 @@
 import os
 import json
-from lib.logger import create_logger
+from logging import Formatter, INFO, WARNING, ERROR, DEBUG, getLogger
 
 
-# Create logger
-log = create_logger(name='config')
 
+class Config:
+    # LOGGING
+    logger_name = 'pdns_auth_docker'
+    # Create formatter
+    formatter: Formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
 
-def config():
-    env_dict = {}
-    try:
-        env_dict['PDNS_PGSQL_DBNAME'] = os.environ['PDNS_PGSQL_DBNAME']
-        env_dict['PDNS_PGSQL_USER'] = os.environ['PDNS_PGSQL_USER']
-        env_dict['PDNS_PGSQL_PASSWORD'] = os.environ['PDNS_PGSQL_PASSWORD']
-        env_dict['PDNS_PGSQL_HOST'] = os.environ['PDNS_PGSQL_HOST']
-        env_dict['PDNS_PGSQL_PORT'] = os.environ['PDNS_PGSQL_PORT']
-    except KeyError as e:
-        log.error(f"Missing environment variable [{e.args[0]}]")
-        log.error(e)
+    def __init__(self):
+        self._logger = getLogger(f'{self.logger_name}.{self.__class__.__name__}')
+        self.powerdns_repo_version = os.environ['POWERDNS_VERSION']
 
-    for k, v in os.environ.items():
-        if "ENV_" in k:
-            env_dict[k] = v
+        # Logging level
+        #if not os.environ['DEBUG']:
+        #    self.logging_level = DEBUG
+        #else:
+        self.logging_level = DEBUG
 
-    log.info("Loaded config from environment!")
-    log.debug(json.dumps(env_dict))
+        # Read the desired run mode
+        self.pdns_run_mode = os.environ['ENV_PDNS_MODE']
 
-    return env_dict
+        self.pgsql_dbname = os.environ['PDNS_PGSQL_DBNAME']
+        self.pgsql_user = os.environ['PDNS_PGSQL_USER']
+        self.pgsql_password = os.environ['PDNS_PGSQL_PASSWORD']
+        self.pgsql_host = os.environ['PDNS_PGSQL_HOST']
+        self.pgsql_port = os.environ['PDNS_PGSQL_PORT']
+
+    def get_extra_envs(self):
+        extra_envs = {'PDNS_PGSQL_DBNAME': f'{self.pgsql_dbname}',
+                      'PDNS_PGSQL_USER': f'{self.pgsql_user}',
+                      'PDNS_PGSQL_PASSWORD': f'{self.pgsql_password}',
+                      'PDNS_PGSQL_HOST': f'{self.pgsql_host}',
+                      'PDNS_PGSQL_PORT': f'{self.pgsql_port}'}
+        return extra_envs
+
+    def get_pdns_version(self):
+        return self.convert_to_version_name(self.powerdns_repo_version)
+
+    @staticmethod
+    def get_envs_for_template(extra_envs: dict = {}):
+        env_dict = {}
+        for k, v in os.environ.items():
+            if "ENV_" in k:
+                env_dict[k] = v
+        env_dict.update(extra_envs)
+        return env_dict
+
+    @staticmethod
+    def convert_to_version_name(name):
+        result = None
+        name = str(name)
+        result = f'{name[0]}.{name[1]}.0'
+        return result
+
