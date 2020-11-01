@@ -27,6 +27,9 @@ RUN pip3 install -r requirements.txt
 ENV TZ=Europe/Stockholm
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN rm -rf /etc/powerdns/*
+RUN mkdir /etc/powerdns/pdns.d && chmod 755 /etc/powerdns/pdns.d
+
 ADD src /app
 
 EXPOSE 53/tcp 53/udp 8001/tcp
