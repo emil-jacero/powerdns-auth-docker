@@ -17,12 +17,12 @@ socket-dir=/var/run/pdns
 master=yes
 slave=no
 allow-axfr-ips={{ ENV_PDNS_AXFR_IPS }}
-also-notify={{ ENV_PDNS_AXFR_IPS }}
+#also-notify={{ ENV_PDNS_AXFR_IPS }}
 default-soa-edit=INCEPTION-INCREMENT
 {% endif -%}
 
 {% if ENV_PDNS_MODE == "SLAVE" -%}
 master=no
 slave=yes
-#superslave=yes
+superslave=yes
 {% endif -%}
