@@ -110,7 +110,13 @@ class Migration:
         """
         try:
             record = self.single_query("select db_version from pdns_meta", True)
-            return record
+            if record is None or record == "":
+                self._logger.error("Missing value in column db_version in table pdns_meta. Should be something like '4.1.0'")
+                sys.exit(1)
+            else:
+                pdns_db_version = version.parse(record)
+                self._logger.debug(f"Database version: {record}")
+                return pdns_db_version
 
         except TypeError as error:
             self._logger.error(error)
@@ -194,28 +200,19 @@ def run_migrations(mig, sql_schemas_path, pdns_version):
         log.debug(f"PowerDNS version: {pdns_version}")
 
     pdns_db_version = mig.get_pdns_db_version()
-    if pdns_db_version is None or pdns_db_version == "":
-        log.error("Missing value in column db_version in table pdns_meta. Should be something like '4.1.0'")
-        log.info("Cannot continue... Killing!")
-        sys.exit(1)
-    else:
-        version_pdns_db = version.parse(pdns_db_version)
-        log.debug(f"Database version: {pdns_db_version}")
 
-    if (version_pdns.major == version_pdns_db.major) and (version_pdns.minor > version_pdns_db.minor):
-        log.info("Found version mismatch. Attempting upgrade...")
-        log.debug("Walking sql_upgrade_scripts")
+    if version_pdns.major == pdns_db_version.major and version_pdns.minor > pdns_db_version.minor:
+        log.info("Found new version. Atempting upgrade!")
+        log.debug(f"Walking {sql_schemas_path}")
         for dir_path, subdir_list, file_list in os.walk(sql_schemas_path):
             for filename in file_list:
                 schema_old, schema_new = parse_sql_schema_filename(filename)
                 log.debug(f'Old schema version: {schema_old}')
                 log.debug(f'New schema version: {schema_new}')
-                # Compare the major & minor versions of the running instances and the sql upgrade scripts
-                # located at "sql_upgrade_scripts".
-                if (version_pdns_db.minor == schema_old.minor) and \
-                        (version_pdns.minor == schema_new.minor) and \
-                        (version_pdns.major == schema_old.major):
-                    log.debug(f"Found match: {filename}")
+
+                pdns_db_version = mig.get_pdns_db_version()
+                if schema_old.major == pdns_db_version.major and schema_old.minor == pdns_db_version.minor and version_pdns.major == schema_new.major and version_pdns.minor >= schema_new.minor:
+                    log.info(f"Found match: {filename}")
                     try:
                         full_path = os.path.join(dir_path, filename)
                         log.info(f"Upgrading from {schema_old} to {schema_new}")
@@ -225,7 +222,7 @@ def run_migrations(mig, sql_schemas_path, pdns_version):
                     except Exception as error:
                         log.error(error)
                 else:
-                    log.debug(f"sql_upgrade_script: {filename}")
+                    log.debug(f"Script never ran: {filename}")
     else:
         log.info("No upgrade needed... Continuing")
 
