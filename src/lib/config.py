@@ -16,12 +16,13 @@ class Config:
     base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     # PATH
-    sql_schema_update_path = os.path.join(base_dir, 'src/sql_schema_updates')
-    sql_schema_path = os.path.join(base_dir, 'src/sql_schemas')
-    template_path = os.path.join(base_dir, 'src/templates')
+    sql_schema_update_path = os.path.join(base_dir, 'sql_schema_updates')
+    sql_schema_path = os.path.join(base_dir, 'sql_schemas')
+    template_path = os.path.join(base_dir, 'templates')
 
     # LOGGING
     logger_name = 'pdns_auth_docker'
+    formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     log_levels = {'DEBUG': DEBUG, 'INFO': INFO, 'WARNING': WARNING, 'ERROR': ERROR}
     env_log_level = os.getenv('LOG_LEVEL')

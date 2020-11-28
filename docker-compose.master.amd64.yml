@@ -24,7 +24,7 @@ services:
       POSTGRES_PASSWORD: supersecretpsqlpw
       POSTGRES_DB: pdns
     volumes:
-      - "db-pdns-auth-master:/var/lib/postgresql/data"
+      - "db-pdns-auth:/var/lib/postgresql/data"
 
   pdns-auth:
     container_name: pdns-auth
@@ -42,7 +42,7 @@ services:
     environment:
       TZ: Europe/Stockholm
       LOG_LEVEL: DEBUG
-      ENV_PDNS_PGSQL_HOST: db-pdns-auth-master
+      ENV_PDNS_PGSQL_HOST: db-pdns-auth
       ENV_PDNS_PGSQL_PORT: 5432
       ENV_PDNS_PGSQL_DBNAME: pdns
       ENV_PDNS_PGSQL_USER: pdns

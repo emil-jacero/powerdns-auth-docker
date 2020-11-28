@@ -37,7 +37,7 @@ class Template:
             os.remove(output_file)
 
         # Write rendered template into file
-        self.log.info(f"Rendering template [{output_file}]")
+        self.log.info(f"Rendering template {template} to {output_file}")
         with open(output_file, 'w') as f:
             f.write(self._load_template(self.name, self.path).render(self.variables))
 
@@ -49,8 +49,8 @@ class Template:
         if path is None or path == "":
             path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
             self.log.info(f"Missing path to templates. Using default...")
-            self.log.info(f"Path: {path}")
+            self.log.info(f"Template path: {path}")
         else:
-            self.log.info(f"Path: {path}")
+            self.log.info(f"Template path: {path}")
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(path))
         return env.get_template(name)

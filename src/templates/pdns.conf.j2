@@ -1,9 +1,9 @@
 launch=gpgsql
-gpgsql-host={{ PDNS_PGSQL_HOST }}
-gpgsql-port={{ PDNS_PGSQL_PORT }}
-gpgsql-dbname={{ PDNS_PGSQL_DBNAME }}
-gpgsql-user={{ PDNS_PGSQL_USER }}
-gpgsql-password={{ PDNS_PGSQL_PASSWORD }}
+gpgsql-host={{ ENV_PDNS_PGSQL_HOST }}
+gpgsql-port={{ ENV_PDNS_PGSQL_PORT }}
+gpgsql-dbname={{ ENV_PDNS_PGSQL_DBNAME }}
+gpgsql-user={{ ENV_PDNS_PGSQL_USER }}
+gpgsql-password={{ ENV_PDNS_PGSQL_PASSWORD }}
 gpgsql-dnssec={{ ENV_PDNS_DNSSEC|default("no", true) }}
 webserver=yes
 webserver-address=0.0.0.0
