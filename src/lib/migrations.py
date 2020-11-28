@@ -222,7 +222,7 @@ def run_migrations(mig, sql_schemas_path, pdns_version_raw):
                     except Exception as error:
                         log.error(error)
                 else:
-                    log.debug(f"Script never ran: {filename}")
+                    log.debug(f"Skipping script: {filename}")
     else:
         log.info("No upgrade needed... Continuing")
 
