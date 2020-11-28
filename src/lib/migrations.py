@@ -190,18 +190,18 @@ def convert_version_name(name):
     return result
 
 
-def run_migrations(mig, sql_schemas_path, pdns_version):
-    if pdns_version is None or pdns_version == "":
+def run_migrations(mig, sql_schemas_path, pdns_version_raw):
+    if pdns_version_raw is None or pdns_version_raw == "":
         log.error("Missing value from PowerDNS. Should be something like '4.1.0'")
         log.info("Cannot continue... Killing!")
         sys.exit(1)
     else:
-        version_pdns = version.parse(pdns_version)
-        log.debug(f"PowerDNS version: {pdns_version}")
+        pdns_version = version.parse(pdns_version_raw)
+        log.debug(f"PowerDNS version: {pdns_version_raw}")
 
     pdns_db_version = mig.get_pdns_db_version()
 
-    if version_pdns.major == pdns_db_version.major and version_pdns.minor > pdns_db_version.minor:
+    if pdns_version.major == pdns_db_version.major and pdns_version.minor > pdns_db_version.minor:
         log.info("Found new version. Atempting upgrade!")
         log.debug(f"Walking {sql_schemas_path}")
         for dir_path, subdir_list, file_list in os.walk(sql_schemas_path):
@@ -211,7 +211,7 @@ def run_migrations(mig, sql_schemas_path, pdns_version):
                 log.debug(f'New schema version: {schema_new}')
 
                 pdns_db_version = mig.get_pdns_db_version()
-                if schema_old.major == pdns_db_version.major and schema_old.minor == pdns_db_version.minor and version_pdns.major == schema_new.major and version_pdns.minor >= schema_new.minor:
+                if schema_old.major == pdns_db_version.major and schema_old.minor == pdns_db_version.minor and pdns_version.major == schema_new.major and pdns_version.minor >= schema_new.minor:
                     log.info(f"Found match: {filename}")
                     try:
                         full_path = os.path.join(dir_path, filename)
