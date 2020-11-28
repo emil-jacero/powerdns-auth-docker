@@ -7,23 +7,20 @@ import time
 import subprocess
 import logging
 
-from lib.logger import logger
+from lib.logger import logger as log
 from lib.config import Config
 from lib.template import Template
-from lib.migrations import PSQL, Migration, run_migrations
+from lib.migrations import PSQL, Migration, migrate
 
+# Set working directory
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-logger_name = f'{Config.logger_name}.entrypoint'
-log = logging.getLogger(logger_name)
+# Init
+mig = Migration()
 
-
-# Init Config and Migration
-config = Config()
-mig = Migration(config)
-script_path = os.path.dirname(os.path.realpath(__file__))
-sql_upgrade_scripts = os.path.join(script_path, 'sql_upgrade_scripts')
-sql_schemas = os.path.join(script_path, 'sql_schemas')
-
+# Write configuration files
+renderer = Template(env_search_term="ENV")
+renderer.render_template(template=os.path.join(Config.template_path, "pdns.conf.j2"), output_file="/etc/powerdns/pdns.conf")
 
 def wait_for_db(user, password, host, port):
     try:
@@ -40,7 +37,11 @@ def has_existing_data(table_name):
         If they exist and has content return true
     """
     query = f"select exists(select * from information_schema.tables where table_name='{table_name}')"
-    conn = PSQL(config)
+    conn = PSQL(pdns_pgsql_host=Config.pdns_pgsql_host,
+                 pdns_pgsql_port=Config.pdns_pgsql_port,
+                 pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
+                 pdns_pgsql_user=Config.pdns_pgsql_user,
+                 pdns_pgsql_password=Config.pdns_pgsql_password)
     cursor = conn.cursor_create()
     cursor.execute(query)
     record = cursor.fetchone()[0]
@@ -49,42 +50,31 @@ def has_existing_data(table_name):
     else:
         return False
 
-
-# Write configuration files
-renderer = Template("pdns.conf.j2")
-renderer.render_template("/etc/powerdns/pdns.conf", config.get_envs_for_template(config.get_extra_envs()))
-
-
-# Wait for DB
-while wait_for_db(user=config.pgsql_user,
-                  password=config.pgsql_password,
-                  host=config.pgsql_host,
-                  port=config.pgsql_port) is False:
-    log.info(f"Waiting for postgres at: {config.pgsql_host}:{config.pgsql_port}")
-    time.sleep(2)
-
+def gen_pdns_version():
+        result = None
+        name = str(Config.powerdns_repo_version)
+        result = f'{name[0]}.{name[1]}.0'
+        return result
 
 # Install fresh database if empty
 if has_existing_data("records") is False:
     # Install DB
     log.info("Install fresh database")
-    sql_schema_path = os.path.join(sql_schemas, '4.1.0_schema.pgsql.sql')
-    create_metadata_table = os.path.join(sql_schemas, 'create_metadata_table.sql')
-    mig.execute_sql_schema(sql_schema_path)
+    sql_schema = os.path.join(Config.sql_schema_path, '4.1.0_schema.pgsql.sql')
+    create_metadata_table = os.path.join(Config.sql_schema_path, 'create_metadata_table.sql')
+    mig.execute_sql_schema(sql_schema)
     mig.execute_sql_schema(create_metadata_table)
 else:
     log.info("Database already exists!")
 
-
 # Run migrations
-if config.pdns_run_mode == "MASTER":
-    run_migrations(mig, sql_upgrade_scripts, config.get_pdns_version())
-elif config.pdns_run_mode == "SLAVE":
-    update_supermaster = os.path.join(sql_schemas, 'update_supermaster.sql')
-    renderer = Template("update_supermaster.sql.j2")
-    renderer.render_template(update_supermaster, config.get_envs_for_template(config.get_extra_envs()))
-    mig.execute_sql_schema(update_supermaster)
-    run_migrations(mig, sql_upgrade_scripts, config.get_pdns_version())
+if Config.pdns_run_mode == "MASTER":
+    migrate(mig, Config.sql_schema_update_path, gen_pdns_version)
+elif Config.pdns_run_mode == "SLAVE":
+    supermaster_sql = os.path.join(Config.sql_schema_path, 'update_supermaster.sql')
+    renderer.render_template(template=os.path.join(Config.template_path, "update_supermaster.sql.j2"), output_file=supermaster_sql)
+    mig.execute_sql_schema(supermaster_sql)
+    migrate(mig, Config.sql_schema_update_path, gen_pdns_version)
 else:
     log.error(f"The environment variable 'ENV_PDNS_MODE' must be set to either MASTER or SLAVE")
     sys.exit(1)
@@ -96,4 +86,3 @@ log.info("Starting PowerDNS")
 process = subprocess.Popen(command1, shell=False)
 process.wait()
 log.info("PowerDNS stopped")
-

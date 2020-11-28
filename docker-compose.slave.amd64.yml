@@ -1,8 +1,8 @@
 version: '3.1'
     
 volumes:
-  db-pdns-auth-slave:
-  pdns-auth-slave:
+  db-pdns-auth:
+  pdns-auth:
 
 networks:
   dns:
@@ -12,8 +12,8 @@ networks:
         - subnet: "192.168.253.0/24"
 
 services:
-  db-pdns-auth-slave:
-    container_name: db-pdns-auth-slave
+  db-pdns-auth:
+    container_name: db-pdns-auth
     image: postgres:11
     restart: always
     networks:
@@ -24,30 +24,29 @@ services:
       POSTGRES_PASSWORD: supersecretpsqlpw
       POSTGRES_DB: pdns
     volumes:
-      - "db-pdns-auth-master:/var/lib/postgresql/data"
+      - "db-pdns-auth:/var/lib/postgresql/data"
 
-
-  pdns-auth-slave:
-    container_name: pdns-auth-slave
+  pdns-auth:
+    container_name: pdns-auth
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        PDNS_VERSION_LONG: 4.3.0
-        PDNS_VERSION: 43
-    image: emiljacero/powerdns-auth-docker:amd64-latest
+        PDNS_VERSION: 44
+    image: emiljacero/powerdns-auth-docker:amd64-4.4.x
     restart: always
     depends_on:
-      - db-pdns-auth-slave
+      - db-pdns-auth
     networks:
       - dns
     environment:
       TZ: Europe/Stockholm
-      PDNS_PGSQL_HOST: db-pdns-auth-slave
-      PDNS_PGSQL_PORT: 5432
-      PDNS_PGSQL_DBNAME: pdns
-      PDNS_PGSQL_USER: pdns
-      PDNS_PGSQL_PASSWORD: supersecretpsqlpw
+      LOG_LEVEL: DEBUG
+      ENV_PDNS_PGSQL_HOST: db-pdns-auth
+      ENV_PDNS_PGSQL_PORT: 5432
+      ENV_PDNS_PGSQL_DBNAME: pdns
+      ENV_PDNS_PGSQL_USER: pdns
+      ENV_PDNS_PGSQL_PASSWORD: supersecretpsqlpw
       ENV_PDNS_DNSSEC: "yes"
       ENV_PDNS_API_PORT: 8001
       ENV_PDNS_API_KEY: supersecretapikey
@@ -60,4 +59,4 @@ services:
       - 53:53/tcp
       - 53:53/udp
     volumes:
-      - "pdns-auth-slave:/var/run/pdns"
+      - "pdns-auth:/var/run/pdns"
