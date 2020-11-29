@@ -8,7 +8,6 @@ class Template:
     def __init__(self, env_search_term="ENV"):
         self.log_name = f'{Config.logger_name}.{self.__class__.__name__}'
         self.log = logging.getLogger(self.log_name)
-        # Separate path from file
         self.path = None
         self.name = None
         self.env_search_term = env_search_term
