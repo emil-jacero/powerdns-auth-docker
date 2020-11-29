@@ -1,7 +1,6 @@
 import os
 import sys
 import psycopg2
-import subprocess
 import logging
 from packaging import version
 
