@@ -227,13 +227,13 @@ def migrate(mig, sql_schemas_path, pdns_version_raw):
     if pdns_version.major == pdns_db_version.major and pdns_version.minor == pdns_db_version.minor:
         log.info("No upgrade needed... Continuing")
     elif pdns_version.major == pdns_db_version.major and pdns_version.minor > pdns_db_version.minor:
-        log.info("Found new version. Atempting upgrade!")
+        log.info("Found new version. Atempting schema upgrade!")
         log.debug(f"Walking {sql_schemas_path}")
         for dir_path, subdir_list, file_list in os.walk(sql_schemas_path):
-            for filename in file_list:
+            filenames = sorted(file_list)
+            log.debug(f"Sorted filenames: {filenames}")
+            for filename in filenames:
                 schema_old, schema_new = parse_sql_schema_filename(filename)
-                log.debug(f'Old schema version: {schema_old}')
-                log.debug(f'New schema version: {schema_new}')
 
                 pdns_db_version = mig.get_pdns_db_version()  # Refresh version from DB
                 if schema_old.major == pdns_db_version.major and schema_old.minor == pdns_db_version.minor and pdns_version.major == schema_new.major and pdns_version.minor >= schema_new.minor:
@@ -241,9 +241,8 @@ def migrate(mig, sql_schemas_path, pdns_version_raw):
                     try:
                         full_path = os.path.join(dir_path, filename)
                         log.info(f"Upgrading from {schema_old} to {schema_new}")
-                        log.debug('RUNNING MIGRATION!')
                         mig.migrate_upgrade(full_path, schema_old, schema_new)
                     except Exception as error:
                         log.error(error)
                 else:
-                    log.debug(f"Skipping script: {filename}")
+                    log.debug(f"Skipping: {filename}")
