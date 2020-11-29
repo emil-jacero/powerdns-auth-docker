@@ -27,13 +27,10 @@ class PSQL:
                  pdns_pgsql_dbname,
                  pdns_pgsql_user,
                  pdns_pgsql_password,
-                 silent=False,
-                 env_search_term="ENV"):
+                 silent=False):
 
         self.log_name = f'{Config.logger_name}.{self.__class__.__name__}'
         self.log = logging.getLogger(self.log_name)
-
-        self.env_search_term = env_search_term
         self.silent = silent
 
         self.pdns_pgsql_dbname = pdns_pgsql_dbname
