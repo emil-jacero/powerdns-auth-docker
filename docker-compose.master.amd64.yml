@@ -29,10 +29,10 @@ services:
   pdns-auth:
     container_name: pdns-auth
     build:
-        context: .
-        dockerfile: Dockerfile
-        args:
-          PDNS_VERSION: 44
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PDNS_VERSION: 44
     image: emiljacero/powerdns-auth-docker:amd64-4.4.x
     restart: always
     depends_on:
