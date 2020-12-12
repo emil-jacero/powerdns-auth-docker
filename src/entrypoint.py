@@ -23,6 +23,7 @@ renderer = Template(env_search_term="ENV")
 pdns_conf_template = os.path.join(Config.template_path, "pdns.conf.j2")
 renderer.render_template(template=pdns_conf_template, output_file="/etc/powerdns/pdns.conf")
 
+
 def wait_for_db(user, password, host, port):
     try:
         conn_string = f"host={host} port={port} user={user} password={password} connect_timeout=1"
@@ -32,6 +33,7 @@ def wait_for_db(user, password, host, port):
     except:
         return False
 
+
 def has_existing_data(table_name):
     """
         Query for table domains and records
@@ -39,10 +41,10 @@ def has_existing_data(table_name):
     """
     query = f"select exists(select * from information_schema.tables where table_name='{table_name}')"
     conn = PSQL(pdns_pgsql_host=Config.pdns_pgsql_host,
-                 pdns_pgsql_port=Config.pdns_pgsql_port,
-                 pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
-                 pdns_pgsql_user=Config.pdns_pgsql_user,
-                 pdns_pgsql_password=Config.pdns_pgsql_password)
+                pdns_pgsql_port=Config.pdns_pgsql_port,
+                pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
+                pdns_pgsql_user=Config.pdns_pgsql_user,
+                pdns_pgsql_password=Config.pdns_pgsql_password)
     cursor = conn.cursor_create()
     cursor.execute(query)
     record = cursor.fetchone()[0]
@@ -51,17 +53,19 @@ def has_existing_data(table_name):
     else:
         return False
 
+
 def gen_pdns_version():
-        result = None
-        name = str(Config.powerdns_repo_version)
-        result = f'{name[0]}.{name[1]}.0'
-        return result
+    result = None
+    name = str(Config.powerdns_repo_version)
+    result = f'{name[0]}.{name[1]}.0'
+    return result
+
 
 # Wait for database to come up
 while wait_for_db(host=Config.pdns_pgsql_host,
-                port=Config.pdns_pgsql_port,
-                user=Config.pdns_pgsql_user,
-                password=Config.pdns_pgsql_password) is False:
+                  port=Config.pdns_pgsql_port,
+                  user=Config.pdns_pgsql_user,
+                  password=Config.pdns_pgsql_password) is False:
     log.info(f"Waiting for postgres at: {Config.pdns_pgsql_host}:{Config.pdns_pgsql_port}")
     time.sleep(2)
 
@@ -82,13 +86,13 @@ if Config.pdns_run_mode == "MASTER":
     migrate(mig, Config.sql_schema_update_path, gen_pdns_version())
 elif Config.pdns_run_mode == "SLAVE":
     supermaster_sql = os.path.join(Config.sql_schema_path, 'update_supermaster.sql')
-    renderer.render_template(template=os.path.join(Config.template_path, "update_supermaster.sql.j2"), output_file=supermaster_sql)
+    renderer.render_template(template=os.path.join(Config.template_path, "update_supermaster.sql.j2"),
+                             output_file=supermaster_sql)
     mig.execute_sql_schema(supermaster_sql)
     migrate(mig, Config.sql_schema_update_path, gen_pdns_version())
 else:
     log.error(f"The environment variable 'ENV_PDNS_MODE' must be set to either MASTER or SLAVE")
     sys.exit(1)
-
 
 # Launch PowerDNS
 command1 = ["pdns_server", "--guardian=no", "--daemon=no", "--disable-syslog", "--write-pid=no"]

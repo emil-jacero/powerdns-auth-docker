@@ -7,7 +7,6 @@ from packaging import version
 from lib.config import Config
 from lib.logger import logger as log
 
-
 '''
     SQL migration DDL's are copied from upstream powerdns
     https://github.com/PowerDNS/pdns/tree/master/modules/gpgsqlbackend
@@ -45,10 +44,10 @@ class PSQL:
     def connection(self):
         try:
             conn = psycopg2.connect(f"host={self.pdns_pgsql_host} \
-                                            port={self.pdns_pgsql_port} \
-                                            dbname={self.pdns_pgsql_dbname} \
-                                            user={self.pdns_pgsql_user} \
-                                            password={self.pdns_pgsql_password}")
+                                      port={self.pdns_pgsql_port} \
+                                      dbname={self.pdns_pgsql_dbname} \
+                                      user={self.pdns_pgsql_user} \
+                                      password={self.pdns_pgsql_password}")
             if not self.silent:
                 self.log.debug(f"Connected to database [{self.pdns_pgsql_dbname}]")
             return conn
@@ -88,7 +87,7 @@ class Migration:
     def __init__(self):
         self.log_name = f'{Config.logger_name}.{self.__class__.__name__}'
         self.log = logging.getLogger(self.log_name)
-    
+
     def single_query(self, query, silent):
         """
             Run a simple single read query.
@@ -96,22 +95,23 @@ class Migration:
         conn = None
         try:
             conn = PSQL(pdns_pgsql_host=Config.pdns_pgsql_host,
-                 pdns_pgsql_port=Config.pdns_pgsql_port,
-                 pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
-                 pdns_pgsql_user=Config.pdns_pgsql_user,
-                 pdns_pgsql_password=Config.pdns_pgsql_password)
+                        pdns_pgsql_port=Config.pdns_pgsql_port,
+                        pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
+                        pdns_pgsql_user=Config.pdns_pgsql_user,
+                        pdns_pgsql_password=Config.pdns_pgsql_password)
             cursor = conn.cursor_create()
             cursor.execute(query)
             record = cursor.fetchone()[0]
             return record
 
         except (Exception, psycopg2.Error) as error:
+            self.log.error(error)
             raise error
 
         finally:
             if conn is not None:
                 conn.close_all()
-    
+
     def get_pdns_db_version(self):
         """
             Grab the PowerDNS version stored in pdns_meta
@@ -119,7 +119,8 @@ class Migration:
         try:
             record = self.single_query("select db_version from pdns_meta", True)
             if record is None or record == "":
-                self.log.error("Missing value in column db_version in table pdns_meta. Should be something like '4.1.0'")
+                self.log.error(
+                    "Missing value in column db_version in table pdns_meta. Should be something like '4.1.0'")
                 sys.exit(1)
             else:
                 pdns_db_version = version.parse(record)
@@ -129,7 +130,7 @@ class Migration:
         except TypeError as error:
             self.log.error(error)
             return None
-    
+
     def bump_pdns_db_version(self, new_version, old_version):
         """
             Update the PowerDNS version stored in pdns_meta. Also store the previous version.
@@ -137,10 +138,10 @@ class Migration:
         conn = None
         try:
             conn = PSQL(pdns_pgsql_host=Config.pdns_pgsql_host,
-                 pdns_pgsql_port=Config.pdns_pgsql_port,
-                 pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
-                 pdns_pgsql_user=Config.pdns_pgsql_user,
-                 pdns_pgsql_password=Config.pdns_pgsql_password)
+                        pdns_pgsql_port=Config.pdns_pgsql_port,
+                        pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
+                        pdns_pgsql_user=Config.pdns_pgsql_user,
+                        pdns_pgsql_password=Config.pdns_pgsql_password)
             cursor = conn.cursor_create()
             query = f"update pdns_meta set db_version='{new_version}', db_version_previous='{old_version}' where db_version='{old_version}'"
             self.log.debug(f'Bumping DB version: [{old_version} -> {new_version}]')
@@ -149,11 +150,12 @@ class Migration:
         except (Exception, psycopg2.DatabaseError) as error:
             conn.rollback()
             self.log.error(f"Was unable to bump the version number to the latest! [{old_version} -> {new_version}]")
-            raise (f"Was unable to bump the version number to the latest! [{old_version} -> {new_version}]")
+            self.log.debug(error)
+            raise Exception(f"Was unable to bump the version number to the latest! [{old_version} -> {new_version}]")
         finally:
             if conn is not None:
                 conn.close_all()
-    
+
     def migrate_upgrade(self, file_path, old_version, new_version):
         """
             Migrate DB to new version
@@ -161,10 +163,10 @@ class Migration:
         conn = None
         try:
             conn = PSQL(pdns_pgsql_host=Config.pdns_pgsql_host,
-                 pdns_pgsql_port=Config.pdns_pgsql_port,
-                 pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
-                 pdns_pgsql_user=Config.pdns_pgsql_user,
-                 pdns_pgsql_password=Config.pdns_pgsql_password)
+                        pdns_pgsql_port=Config.pdns_pgsql_port,
+                        pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
+                        pdns_pgsql_user=Config.pdns_pgsql_user,
+                        pdns_pgsql_password=Config.pdns_pgsql_password)
             with conn.cursor_create() as cursor:
                 cursor.execute(open(file_path, "r").read())
             conn.commit()
@@ -178,15 +180,15 @@ class Migration:
         finally:
             if conn is not None:
                 conn.close_all()
-    
+
     def execute_sql_schema(self, file_path):
         conn = None
         try:
             conn = PSQL(pdns_pgsql_host=Config.pdns_pgsql_host,
-                 pdns_pgsql_port=Config.pdns_pgsql_port,
-                 pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
-                 pdns_pgsql_user=Config.pdns_pgsql_user,
-                 pdns_pgsql_password=Config.pdns_pgsql_password)
+                        pdns_pgsql_port=Config.pdns_pgsql_port,
+                        pdns_pgsql_dbname=Config.pdns_pgsql_dbname,
+                        pdns_pgsql_user=Config.pdns_pgsql_user,
+                        pdns_pgsql_password=Config.pdns_pgsql_password)
             with conn.cursor_create() as cursor:
                 cursor.execute(open(file_path, "r").read())
             conn.commit()
@@ -219,7 +221,7 @@ def migrate(mig, sql_schemas_path, pdns_version_raw):
         log.debug(f"PowerDNS version: {pdns_version_raw}")
 
     pdns_db_version = mig.get_pdns_db_version()  # Refresh version from DB
-    
+
     if pdns_version.major == pdns_db_version.major and pdns_version.minor == pdns_db_version.minor:
         log.info("No upgrade needed... Continuing")
     elif pdns_version.major == pdns_db_version.major and pdns_version.minor > pdns_db_version.minor:
