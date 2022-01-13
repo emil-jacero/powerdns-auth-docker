@@ -4,6 +4,11 @@
 
 This is a PowerDNS authoritative docker image designed to handle minor and major updates seamlessly.
 
+## Related projects
+
+- [powerdns-recursor-docker](https://github.com/emil-jacero/powerdns-recursor-docker)
+- [powerdns-dnsdist-docker](https://github.com/emil-jacero/powerdns-dnsdist-docker)
+
 ## Supported Architectures
 
 The images are built and tested on multiple platforms.
@@ -30,7 +35,6 @@ This image provides various versions that are available via tags. `latest` tag p
 | armhf-latest | Latest stable version |
 | armhf-4.4.x | Latest micro release of 4.4 |
 
-
 ## Configuration
 
 You configure using environment variables only. The environment variable will be converted to the nameing scheme PowerDNS is using.
@@ -56,7 +60,6 @@ You configure using environment variables only. The environment variable will be
 | `AUTOSECONDARY_NAMESERVER` | The name of the primary DNS server  | N/A |
 | `AUTOSECONDARY_ACCOUNT` | The account used on the primary DNS server | N/A |
 
-
 ### Database support
 
 - SQLite3
@@ -65,6 +68,7 @@ You configure using environment variables only. The environment variable will be
 ## Examples
 
 ### Single authoritative primary with SQLite
+
 ```
 version: '3'
 services:
@@ -90,6 +94,7 @@ services:
 ### Single authoritative secondary with SQLite
 
 Running a secondary authoritative requires the extra environment variables beginning with `AUTOSECONDARY`.
+
 ```
 version: '3'
 services:
@@ -119,6 +124,7 @@ services:
 ### Single authoritative secondary with SQLite and PowerDNS recursor
 
 Please note that the authoritative server is listening on 5300. That means notifications has to be sent towards `192.168.100.20:5300`.
+
 ```
 version: '3'
 services:
@@ -186,6 +192,7 @@ services:
 ## Development
 
 ### TODO
+
 - [ ] Automate builds with github actions
 - [ ] Rewrite so that the builds are using Major, Mini, Micro releases tagging.
 - [ ] Backup - Run a backup of the DB when detecting a new schema just before running the schema.
