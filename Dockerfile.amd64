@@ -1,0 +1,39 @@
+FROM debian:buster
+
+LABEL maintainer="emil@jacero.se"
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
+
+RUN apt-get update && apt-get -y install tzdata
+RUN apt install -y ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip python3-psycopg2 && apt -y upgrade
+
+# Create build arguments with sane defaults
+ARG PDNS_VERSION=44
+# NOTE: DO NOT OVERWRITE THIS VARIABLE... EVER!
+ENV POWERDNS_VERSION=$PDNS_VERSION
+ENV LOG_LEVEL=INFO
+
+RUN touch /etc/apt/sources.list.d/pdns.list && echo deb [arch=amd64] http://repo.powerdns.com/debian buster-auth-$PDNS_VERSION main > /etc/apt/sources.list.d/pdns.list
+RUN echo "Package: pdns-*" >> /etc/apt/preferences.d/pdns && \
+    echo "Pin: origin repo.powerdns.com" >> /etc/apt/preferences.d/pdns && \
+    echo "Pin-Priority: 600" >> /etc/apt/preferences.d/pdns
+RUN wget -O- https://repo.powerdns.com/FD380FBB-pub.asc | apt-key add - && apt-get update
+RUN apt-get -y install pdns-server pdns-backend-pgsql pdns-backend-sqlite3 postgresql-client
+
+# Installing python modules
+ADD requirements.txt /
+RUN pip3 install -r requirements.txt
+
+ENV TZ=Etc/UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN rm -rf /etc/powerdns/*
+RUN mkdir /etc/powerdns/pdns.d && chmod 755 /etc/powerdns/pdns.d
+
+ADD src /app
+
+EXPOSE 53/tcp 53/udp 8001/tcp
+
+WORKDIR /app
+ENTRYPOINT /app/entrypoint.py

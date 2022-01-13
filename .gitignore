@@ -1,0 +1,8 @@
+__pycache__
+test_functions.sh
+docker-compose.yml
+TESTING
+test.py
+.idea
+.DS_Store
+dev

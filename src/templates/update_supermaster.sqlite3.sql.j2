@@ -1,0 +1,1 @@
+INSERT OR IGNORE INTO supermasters VALUES ('{{ autosecondary['SUPERSLAVE_IP'] or autosecondary['AUTOSECONDARY_IP'] }}', '{{ autosecondary['SUPERSLAVE_NAMESERVER'] or autosecondary['AUTOSECONDARY_NAMESERVER'] }}', '{{ autosecondary['SUPERSLAVE_ACCOUNT'] or autosecondary['AUTOSECONDARY_ACCOUNT'] }}');
