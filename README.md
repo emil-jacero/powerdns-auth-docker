@@ -39,9 +39,9 @@ This image provides various versions that are available via tags. `latest` tag p
 
 You configure using environment variables only. The environment variable will be converted to the nameing scheme PowerDNS is using.
 
-**Example:**
+### Example
 
-**Docker env:** ENV_query_local_address
+**Docker env:** ENV_QUERY_LOCAL_ADDRESS
 
 **PDNS config:** query-local-address
 
@@ -49,8 +49,10 @@ You configure using environment variables only. The environment variable will be
 
 | Name | Value | Default |
 | :----: | --- | --- |
-| `TZ` | Timezone | Etc/UTC |
-| `ENV_launch` | Which database backend to use | N/A |
+| `TZ` | Timezone | `Etc/UTC` |
+| `EXEC_MODE` | Running on Docker or in Kubernetes? (`DOCKER` or `K8S`) | `DOCKER` |
+| `ENV_LAUNCH` | What db to use? (`gsqlite3`, `gpgsql`) | `gsqlite3` |
+| `ENV_PRIMARY` | Running as primary? (`yes` or `no`) | `yes` |
 
 ### Required environment variables for secondaries
 
@@ -79,14 +81,14 @@ services:
     network_mode: host
     environment:
       TZ: Etc/UTC
-      ENV_primary: "yes"
-      ENV_launch: gsqlite3
-      ENV_gsqlite3_database: "/var/lib/powerdns/auth.db"
-      ENV_gsqlite3_pragma_synchronous: 0
-      ENV_entropy_source: /dev/urandom
-      ENV_socket_dir: /var/run/powerdns-authorative
-      ENV_local_address: 192.168.100.20
-      ENV_local_port: 53
+      ENV_PRIMARY: "yes"
+      ENV_LAUNCH: gsqlite3
+      ENV_GSQLITE3_DATABASE: "/var/lib/powerdns/auth.db"
+      ENV_GSQLITE3_PRAGMA_SYNCHRONOUS: 0
+      ENV_ENTROPY_SOURCE: /dev/urandom
+      ENV_SOCKET_DIR: /var/run/powerdns-authorative
+      ENV_LOCAL_ADDRESS: 192.168.100.20
+      ENV_LOCAL_PORT: 53
     volumes:
       - ./db:/var/lib/powerdns
 ```
@@ -108,15 +110,15 @@ services:
       AUTOSECONDARY_IP: 10.10.0.4
       AUTOSECONDARY_NAMESERVER: ns1.larnet.eu
       AUTOSECONDARY_ACCOUNT: Larnet
-      ENV_secondary: "yes"
-      ENV_autosecondary: "yes"
-      ENV_launch: gsqlite3
-      ENV_gsqlite3_database: "/var/lib/powerdns/auth.db"
-      ENV_gsqlite3_pragma_synchronous: 0
-      ENV_entropy_source: /dev/urandom
-      ENV_socket_dir: /var/run/powerdns-authorative
-      ENV_local_address: 192.168.100.20
-      ENV_local_port: 53
+      ENV_SECONDARY: "yes"
+      ENV_AUTOSECONDARY: "yes"
+      ENV_LAUNCH: gsqlite3
+      ENV_GSQLITE3_DATABASE: "/var/lib/powerdns/auth.db"
+      ENV_GSQLITE3_PRAGMA_SYNCHRONOUS: 0
+      ENV_ENTROPY_SOURCE: /dev/urandom
+      ENV_SOCKET_DIR: /var/run/powerdns-authorative
+      ENV_LOCAL_ADDRESS: 192.168.100.20
+      ENV_LOCAL_PORT: 53
     volumes:
       - ./db:/var/lib/powerdns
 ```
@@ -138,15 +140,15 @@ services:
       AUTOSECONDARY_IP: 192.168.100.10
       AUTOSECONDARY_NAMESERVER: ns1.example.com
       AUTOSECONDARY_ACCOUNT: Example
-      ENV_secondary: "yes"
-      ENV_autosecondary: "yes"
-      ENV_launch: gsqlite3
-      ENV_gsqlite3_database: "/var/lib/powerdns/auth.db"
-      ENV_gsqlite3_pragma_synchronous: 0
-      ENV_entropy_source: /dev/urandom
-      ENV_socket_dir: /var/run/powerdns-authorative
-      ENV_local_address: 192.168.100.20
-      ENV_local_port: 5300
+      ENV_SECONDARY: "yes"
+      ENV_AUTOSECONDARY: "yes"
+      ENV_LAUNCH: gsqlite3
+      ENV_GSQLITE3_DATABASE: "/var/lib/powerdns/auth.db"
+      ENV_GSQLITE3_PRAGMA_SYNCHRONOUS: 0
+      ENV_ENTROPY_SOURCE: /dev/urandom
+      ENV_SOCKET_DIR: /var/run/powerdns-authorative
+      ENV_LOCAL_ADDRESS: 192.168.100.20
+      ENV_LOCAL_PORT: 5300
     volumes:
       - ./db:/var/lib/powerdns
 
