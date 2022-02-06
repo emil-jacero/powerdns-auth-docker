@@ -32,7 +32,6 @@ def parse_pdns_config(file):
     try:
         f = open(file, "r")
         for l in f:
-            print(l)
             split_line = l.strip().split("=")
             obj = {split_line[0]: split_line[1]}
             pdns_config.update(obj)

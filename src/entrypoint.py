@@ -76,9 +76,9 @@ if Config.exec_mode == "DOCKER":
         sys.exit(1)
 elif Config.exec_mode == "K8S":
     if "gpgsql" in Config.pdns_config['launch']:
-        print("GPGSQL")
+        gpgsql()
     elif "gsqlite3" in Config.pdns_config['launch']:
-        print("GSQLITE3")
+        gsqlite3()
     else:
         log.error("No backend discovered")
         sys.exit(1)
