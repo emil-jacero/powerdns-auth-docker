@@ -27,21 +27,60 @@ def get_environment(env_search_term="ENV"):
     return enviroment, autosecondary
 
 
+def parse_pdns_config(file):
+    pdns_config = {}
+    try:
+        f = open(file, "r")
+        for l in f:
+            split_line = l.strip().split("=")
+            obj = {split_line[0]: split_line[1]}
+            pdns_config.update(obj)
+    except Exception as error:
+        print(error)
+    return pdns_config
+
+
 class Config:
     enviroment, autosecondary = get_environment("ENV")
 
-    #GLOBAL
+    # EXECUTION MODE
     powerdns_app_version = os.environ['POWERDNS_VERSION']
-    if int(powerdns_app_version) >= 45:
-        if enviroment.get('primary') == 'yes':
-            pdns_mode = "primary"
+    exec_mode = os.environ['EXEC_MODE']
+    if exec_mode == "K8S":
+        pdns_config = {}
+        pdns_config = parse_pdns_config("/etc/powerdns/pdns.conf")
+        if not pdns_config:
+            sys.exit(1)
+        if int(powerdns_app_version) >= 45:
+            if pdns_config.get("primary") == "yes":
+                pdns_mode = "primary"
+            elif pdns_config.get("secondary") == "yes":
+                pdns_mode = "secondary"
+            else:
+                pdns_mode = None
         else:
-            pdns_mode = "secondary"
-    else:
-        if enviroment.get('master') == 'yes':
-            pdns_mode = "primary"
+            if pdns_config.get("master") == "yes":
+                pdns_mode = "primary"
+            elif pdns_config.get("slave") == "yes":
+                pdns_mode = "secondary"
+            else:
+                pdns_mode = None
+
+    elif exec_mode == "DOCKER":
+        if int(powerdns_app_version) >= 45:
+            if enviroment.get("primary") == "yes":
+                pdns_mode = "primary"
+            elif enviroment.get("secondary") == "yes":
+                pdns_mode = "secondary"
+            else:
+                pdns_mode = None
         else:
-            pdns_mode = "secondary"
+            if enviroment.get("master") == "yes":
+                pdns_mode = "primary"
+            elif enviroment.get("slave") == "yes":
+                pdns_mode = "secondary"
+            else:
+                pdns_mode = None
 
     # PATHS
     base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

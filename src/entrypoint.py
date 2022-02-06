@@ -23,7 +23,7 @@ def gen_pdns_version():
     return result
 
 
-if "gpgsql" in Config.enviroment['launch']:
+def gpgsql():
     from lib.migrations.gpgsql import install, migrate, execute_sql_schema, wait_for_db
 
     log.debug("Discovered PostgreSQL")
@@ -44,7 +44,8 @@ if "gpgsql" in Config.enviroment['launch']:
         execute_sql_schema(autosecondary_sql)
         migrate(sql_update_schemas_path, gen_pdns_version())
 
-elif "gsqlite3" in Config.enviroment['launch']:
+
+def gsqlite3():
     from lib.migrations.gsqlite3 import install, migrate, execute_sql_schema
 
     log.debug("Discovered SQLite")
@@ -64,24 +65,39 @@ elif "gsqlite3" in Config.enviroment['launch']:
         execute_sql_schema(autosecondary_sql)
         migrate(sql_update_schemas_path, gen_pdns_version())
 
-else:
-    log.error("No backend discovered")
-    sys.exit(1)
+
+if Config.exec_mode == "DOCKER":
+    if "gpgsql" in Config.enviroment['launch']:
+        gpgsql()
+    elif "gsqlite3" in Config.enviroment['launch']:
+        gsqlite3()
+    else:
+        log.error("No backend discovered")
+        sys.exit(1)
+elif Config.exec_mode == "K8S":
+    if "gpgsql" in Config.pdns_config['launch']:
+        gpgsql()
+    elif "gsqlite3" in Config.pdns_config['launch']:
+        gsqlite3()
+    else:
+        log.error("No backend discovered")
+        sys.exit(1)
 
 # Write configuration files
-renderer.render_template(template=os.path.join(Config.template_path,
-                                               "pdns.conf.j2"),
-                         output_file="/etc/powerdns/pdns.conf")
+if Config.exec_mode == "DOCKER":
+    renderer.render_template(template=os.path.join(Config.template_path,
+                                                   "pdns.conf.j2"),
+                             output_file="/etc/powerdns/pdns.conf")
 
 # Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
-log.debug(json.dumps(Config.enviroment, indent=2))
-log.debug(json.dumps(Config.autosecondary, indent=2))
+# log.debug(json.dumps(Config.enviroment, indent=2))
+# log.debug(json.dumps(Config.autosecondary, indent=2))
 
 # Log the configuration
 if os.getenv('LOG_LEVEL') == "DEBUG":
     log.debug("------------------------------------------")
     for line in open("/etc/powerdns/pdns.conf"):
-        log.debug(line)
+        log.debug(line.strip())
     log.debug("------------------------------------------")
 
 # Launch PowerDNS
