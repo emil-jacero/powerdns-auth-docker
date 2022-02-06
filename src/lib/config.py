@@ -29,11 +29,15 @@ def get_environment(env_search_term="ENV"):
 
 def parse_pdns_config(file):
     pdns_config = {}
-    f = open(file, "r")
-    for l in f:
-        split_line = l.strip().split("=")
-        obj = {split_line[0]: split_line[1]}
-        pdns_config.update(obj)
+    try:
+        f = open(file, "r")
+        for l in f:
+            print(l)
+            split_line = l.strip().split("=")
+            obj = {split_line[0]: split_line[1]}
+            pdns_config.update(obj)
+    except Exception as error:
+        print(error)
     return pdns_config
 
 
@@ -46,6 +50,8 @@ class Config:
     if exec_mode == "K8S":
         pdns_config = {}
         pdns_config = parse_pdns_config("/etc/powerdns/pdns.conf")
+        if not pdns_config:
+            sys.exit(1)
 
     if int(powerdns_app_version) >= 45:
         if enviroment.get("primary") == "yes":
