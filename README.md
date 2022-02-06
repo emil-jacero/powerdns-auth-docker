@@ -37,24 +37,40 @@ This image provides various versions that are available via tags. `latest` tag p
 
 ## Configuration
 
-You configure using environment variables only. The environment variable will be converted to the nameing scheme PowerDNS is using.
+You configure using environment variables or as a mounted volume. The environment variable will be converted to the nameing scheme PowerDNS is using.
 
-### Example
+### Environment variable example
 
-**Docker env:** ENV_QUERY_LOCAL_ADDRESS
+First set the `EXEC_MODE` to `DOCKER` (Default)
 
-**PDNS config:** query-local-address
+**Docker env:** `ENV_LOCAL_ADDRESS=0.0.0.0` or `ENV_LOCAL_ADDRESS: 0.0.0.0`
 
-### Required environment variables
+**PDNS config:** `local-address=0.0.0.0`
+
+### Mounted volume example
+
+Save the below config to a file and mount to `/etc/powerdns/pdns.conf`
+
+```
+primary=no
+secondary=yes
+launch=gsqlite3
+gsqlite3-database=/var/lib/powerdns/auth.db
+gsqlite3-pragma-synchronous=0
+local-address=0.0.0.0
+local-port=53
+```
+
+---
+
+## Required environment variables
 
 | Name | Value | Default |
 | :----: | --- | --- |
 | `TZ` | Timezone | `Etc/UTC` |
 | `EXEC_MODE` | Running on Docker or in Kubernetes? (`DOCKER` or `K8S`) | `DOCKER` |
-| `ENV_LAUNCH` | What db to use? (`gsqlite3`, `gpgsql`) | `gsqlite3` |
-| `ENV_PRIMARY` | Running as primary? (`yes` or `no`) | `yes` |
 
-### Required environment variables for secondaries
+## Required environment variables for secondaries
 
 | Name | Value | Default |
 | :----: | --- | --- |
@@ -62,7 +78,19 @@ You configure using environment variables only. The environment variable will be
 | `AUTOSECONDARY_NAMESERVER` | The name of the primary DNS server  | N/A |
 | `AUTOSECONDARY_ACCOUNT` | The account used on the primary DNS server | N/A |
 
-### Database support
+## Common environment variables
+
+| Name | Value | Default |
+| :----: | --- | --- |
+| `ENV_PRIMARY` | [Docs](https://doc.powerdns.com/authoritative/settings.html#primary) | `no` |
+| `ENV_SECONDARY` | [Docs](https://doc.powerdns.com/authoritative/settings.html#secondary) | `yes` |
+| `ENV_LAUNCH` | [Docs](https://doc.powerdns.com/authoritative/settings.html#launch) | `gsqlite3` |
+| `ENV_GSQLITE3_DATABASE` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-sqlite3.html) | `"/var/lib/powerdns/auth.db"` |
+| `ENV_GSQLITE3_PRAGMA_SYNCHRONOUS` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-sqlite3.html) | `0` |
+| `ENV_LOCAL_ADDRESS` | [Docs](https://doc.powerdns.com/authoritative/settings.html#local-address) | `"0.0.0.0"` |
+| `ENV_LOCAL_PORT` | [Docs](https://doc.powerdns.com/authoritative/settings.html#local-port) | `53` |
+
+## Database support
 
 - SQLite3
 - PostgreSQL

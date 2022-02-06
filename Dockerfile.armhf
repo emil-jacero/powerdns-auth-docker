@@ -15,14 +15,17 @@ ENV POWERDNS_VERSION=$PDNS_VERSION
 # Sane defaults
 ENV LOG_LEVEL=INFO
 ENV EXEC_MODE=DOCKER
-ENV ENV_LAUNCH=gsqlite3
-ENV ENV_PRIMARY=yes
+ENV ENV_LAUNCH="gsqlite3"
+ENV ENV_GSQLITE3_DATABASE="/var/lib/powerdns/auth.db"
+ENV ENV_GSQLITE3_PRAGMA_SYNCHRONOUS=0
+ENV ENV_LOCAL_ADDRESS="0.0.0.0"
+ENV ENV_LOCAL_PORT=53
 
 RUN touch /etc/apt/sources.list.d/pdns.list && echo deb [arch=armhf] http://repo.powerdns.com/raspbian buster-auth-$PDNS_VERSION main > /etc/apt/sources.list.d/pdns.list
 RUN echo "Package: pdns-*" >> /etc/apt/preferences.d/pdns && \
     echo "Pin: origin repo.powerdns.com" >> /etc/apt/preferences.d/pdns && \
     echo "Pin-Priority: 600" >> /etc/apt/preferences.d/pdns
-RUN wget -O- https://repo.powerdns.com/FD380FBB-pub.asc | apt-key add - && apt-get update
+RUN curl -fsSL https://repo.powerdns.com/FD380FBB-pub.asc | apt-key add - && apt-get update
 RUN apt -y install pdns-server pdns-backend-pgsql pdns-backend-sqlite3 postgresql-client
 
 # Installing python modules
