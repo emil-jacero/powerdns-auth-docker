@@ -23,17 +23,11 @@ The images are built and tested on multiple platforms.
 
 This image provides various versions that are available via tags. `latest` tag provides the latest stable version.
 
-<span style="color:red">**NOTE: Sadly PowerDNS does not support arm on 4.5 yet.**</span>.
-
 | Tag | Description |
 | :----: | --- |
 | amd64-latest | Latest stable version |
+| amd64-4.6.x | Latest micro release of 4.6 |
 | amd64-4.5.x | Latest micro release of 4.5 |
-| amd64-4.4.x | Latest micro release of 4.4 |
-| arm64v8-latest | Latest stable version |
-| arm64v8-4.4.x | Latest micro release of 4.4 |
-| armhf-latest | Latest stable version |
-| armhf-4.4.x | Latest micro release of 4.4 |
 
 ## Configuration
 
