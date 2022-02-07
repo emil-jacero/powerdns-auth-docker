@@ -32,21 +32,26 @@ RUN echo "Package: pdns-*" >> /etc/apt/preferences.d/pdns && \
 RUN curl -fsSL https://repo.powerdns.com/FD380FBB-pub.asc | apt-key add - && apt-get update
 RUN apt -y install pdns-server pdns-backend-pgsql pdns-backend-sqlite3 postgresql-client
 
+
+ADD src /app
+
 # Installing python modules
 ADD requirements.txt /
 RUN pip3 install -r requirements.txt
 
+# Set Timezone
 ENV TZ=Etc/UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Prepare directories for PowerDNS
 RUN rm -rf /etc/powerdns/*
 RUN mkdir /etc/powerdns/pdns.d && chmod 755 /etc/powerdns/pdns.d
 RUN mkdir -p /var/run/pdns && chown 101:101 /var/run/pdns
 
+# Add app
 ADD src /app
 
 USER 101:101
-
 EXPOSE 53/tcp 53/udp 8001/tcp
 WORKDIR /app
 ENTRYPOINT /app/entrypoint.py
