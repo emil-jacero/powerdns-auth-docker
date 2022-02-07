@@ -46,7 +46,7 @@ class Config:
     # EXECUTION MODE
     powerdns_app_version = os.environ['POWERDNS_VERSION']
     exec_mode = os.environ['EXEC_MODE']
-    if exec_mode == "K8S":
+    if exec_mode == "VOL":
         pdns_config = {}
         pdns_config = parse_pdns_config("/etc/powerdns/pdns.conf")
         if not pdns_config:
@@ -66,7 +66,7 @@ class Config:
             else:
                 pdns_mode = None
 
-    elif exec_mode == "DOCKER":
+    elif exec_mode == "ENV":
         if int(powerdns_app_version) >= 45:
             if enviroment.get("primary") == "yes":
                 pdns_mode = "primary"

@@ -66,7 +66,7 @@ def gsqlite3():
         migrate(sql_update_schemas_path, gen_pdns_version())
 
 
-if Config.exec_mode == "DOCKER":
+if Config.exec_mode == "ENV":
     if "gpgsql" in Config.enviroment['launch']:
         gpgsql()
     elif "gsqlite3" in Config.enviroment['launch']:
@@ -74,7 +74,13 @@ if Config.exec_mode == "DOCKER":
     else:
         log.error("No backend discovered")
         sys.exit(1)
-elif Config.exec_mode == "K8S":
+
+    # Write configuration files
+    template = os.path.join(Config.template_path, "pdns.conf.j2")
+    renderer.render_template(template=template,
+                             output_file="/etc/powerdns/pdns.conf")
+
+elif Config.exec_mode == "VOL":
     if "gpgsql" in Config.pdns_config['launch']:
         gpgsql()
     elif "gsqlite3" in Config.pdns_config['launch']:
@@ -82,12 +88,6 @@ elif Config.exec_mode == "K8S":
     else:
         log.error("No backend discovered")
         sys.exit(1)
-
-# Write configuration files
-if Config.exec_mode == "DOCKER":
-    renderer.render_template(template=os.path.join(Config.template_path,
-                                                   "pdns.conf.j2"),
-                             output_file="/etc/powerdns/pdns.conf")
 
 # Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
 # log.debug(json.dumps(Config.enviroment, indent=2))
