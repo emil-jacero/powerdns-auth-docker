@@ -35,6 +35,7 @@ def parse_pdns_config(file):
         for l in f:
             conf_list = l.strip()
             conf_list = filter(None, conf_list)
+        print(conf_list)
         for l in conf_list:
             split_line = l.strip().split("=")
             if os.getenv('LOG_LEVEL') == "DEBUG":
