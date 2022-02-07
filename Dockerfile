@@ -41,11 +41,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN rm -rf /etc/powerdns/*
 RUN mkdir /etc/powerdns/pdns.d && chmod 755 /etc/powerdns/pdns.d
+RUN mkdir -p /var/run/pdns && chown 101:101 /var/run/pdns
 
 ADD src /app
 
-EXPOSE 53/tcp 53/udp 8001/tcp
-
 USER 101:101
+
+EXPOSE 53/tcp 53/udp 8001/tcp
 WORKDIR /app
 ENTRYPOINT /app/entrypoint.py
