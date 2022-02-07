@@ -32,7 +32,8 @@ def parse_pdns_config(file):
     pdns_config = {}
     try:
         f = open(file, "r")
-        conf_list = list(map(lambda s: s.strip(), f))  # [x for x in f if x]
+        conf_list = list(map(lambda s: s.strip(), f))
+        conf_list = [x for x in f if x]
         print(conf_list)
         for l in conf_list:
             split_line = l.strip().split("=")
