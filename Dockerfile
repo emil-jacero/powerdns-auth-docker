@@ -50,7 +50,7 @@ RUN mkdir -p /var/run/pdns && chown -R 101:101 /var/run/pdns
 ADD src /app
 RUN chown -R 101:101 /app
 
-USER 101:101
+#USER 101:101
 EXPOSE 53/tcp 53/udp 8001/tcp
 WORKDIR /app
 ENTRYPOINT /app/entrypoint.py
