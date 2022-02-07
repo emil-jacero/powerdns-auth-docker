@@ -28,11 +28,15 @@ def get_environment(env_search_term="ENV"):
 
 
 def parse_pdns_config(file):
+    conf_list = []
     pdns_config = {}
     try:
         f = open(file, "r")
         for l in f:
-            split_line = l.strip().replace(" ", "").remove("").split("=")
+            conf_list = l.strip()
+            conf_list = filter(None, conf_list)
+        for l in conf_list:
+            split_line = l.strip().split("=")
             if os.getenv('LOG_LEVEL') == "DEBUG":
                 print(split_line)
             obj = {split_line[0]: split_line[1]}
