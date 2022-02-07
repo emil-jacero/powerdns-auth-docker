@@ -36,8 +36,8 @@ def parse_pdns_config(file):
         conf_list = [x for x in conf_list if x]
         if os.getenv('LOG_LEVEL') == "DEBUG":
             print(conf_list)
-        for l in conf_list:
-            split_line = l.strip().split("=")
+        for line in conf_list:
+            split_line = line.split("=")
             obj = {split_line[0]: split_line[1]}
             pdns_config.update(obj)
     except Exception as error:
