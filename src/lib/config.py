@@ -56,6 +56,12 @@ class Config:
         pdns_config = parse_pdns_config("/etc/powerdns/pdns.conf")
         if not pdns_config:
             sys.exit(1)
+        # PostgreSQL
+        gpgsql_dbname = pdns_config.get('gpgsql-dbname')
+        gpgsql_user = pdns_config.get('gpgsql-user')
+        gpgsql_password = pdns_config.get('gpgsql-password')
+        gpgsql_host = pdns_config.get('gpgsql-host')
+        gpgsql_port = pdns_config.get('gpgsql-port')
         if int(powerdns_app_version) >= 45:
             if pdns_config.get("primary") == "yes":
                 pdns_mode = "primary"
@@ -72,6 +78,12 @@ class Config:
                 pdns_mode = None
 
     elif exec_mode == "ENV":
+        # PostgreSQL
+        gpgsql_dbname = enviroment.get('gpgsql-dbname')
+        gpgsql_user = enviroment.get('gpgsql-user')
+        gpgsql_password = enviroment.get('gpgsql-password')
+        gpgsql_host = enviroment.get('gpgsql-host')
+        gpgsql_port = enviroment.get('gpgsql-port')
         if int(powerdns_app_version) >= 45:
             if enviroment.get("primary") == "yes":
                 pdns_mode = "primary"
@@ -95,13 +107,6 @@ class Config:
 
     # SQLite
     gsqlite3_db_path = '/var/lib/powerdns/auth.db'
-
-    # PostgreSQL
-    gpgsql_dbname = enviroment.get('gpgsql-dbname')
-    gpgsql_user = enviroment.get('gpgsql-user')
-    gpgsql_password = enviroment.get('gpgsql-password')
-    gpgsql_host = enviroment.get('gpgsql-host')
-    gpgsql_port = enviroment.get('gpgsql-port')
 
     # LOGGING
     logger_name = 'pdns_auth'
