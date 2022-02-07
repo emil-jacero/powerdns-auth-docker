@@ -15,6 +15,17 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 # Init
 renderer = Template()
 
+# Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
+# log.debug(json.dumps(Config.enviroment, indent=2))
+# log.debug(json.dumps(Config.autosecondary, indent=2))
+
+# Log the configuration
+if os.getenv('LOG_LEVEL') == "DEBUG":
+    log.debug("------------------------------------------")
+    for line in open("/etc/powerdns/pdns.conf"):
+        log.debug(line.strip())
+    log.debug("------------------------------------------")
+
 
 def gen_pdns_version():
     result = None
@@ -88,17 +99,6 @@ elif Config.exec_mode == "VOL":
     else:
         log.error("No backend discovered")
         sys.exit(1)
-
-# Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
-# log.debug(json.dumps(Config.enviroment, indent=2))
-# log.debug(json.dumps(Config.autosecondary, indent=2))
-
-# Log the configuration
-if os.getenv('LOG_LEVEL') == "DEBUG":
-    log.debug("------------------------------------------")
-    for line in open("/etc/powerdns/pdns.conf"):
-        log.debug(line.strip())
-    log.debug("------------------------------------------")
 
 # Launch PowerDNS
 command1 = [
