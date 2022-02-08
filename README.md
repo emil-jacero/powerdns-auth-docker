@@ -13,29 +13,41 @@ This is a PowerDNS authoritative docker image designed to handle minor and major
 
 The images are built and tested on multiple platforms.
 
-| Architecture | Tag |
-| :----: | --- |
-| x86-64 | amd64-latest |
-| arm64 | arm64v8-latest |
-| armv7l | armhf-latest |
+| Architecture |
+| :----: |
+| x86-64 |
+| arm64 |
+| armv7l |
 
-## Version Tags
+## Tag naming scheme
+
+asdasd
+
+## Latest tags
 
 This image provides various versions that are available via tags. `latest` tag provides the latest stable version.
 
 | Tag | Description |
 | :----: | --- |
-| amd64-latest | Latest stable version |
-| amd64-4.6.x | Latest micro release of 4.6 |
-| amd64-4.5.x | Latest micro release of 4.5 |
+| latest | Latest release |
+| 4.6-latest | Latest micro release of 4.6 |
+| 4.5-latest | Latest micro release of 4.5 |
 
 ## Configuration
 
 You configure using environment variables or as a mounted volume. The environment variable will be converted to the nameing scheme PowerDNS is using.
 
-### Environment variable example
+The mounted volume MUST be mounted at `/pdns.conf`
 
-First set the `EXEC_MODE` to `ENV` (Default)
+### Configuration parsing order
+
+This container is designed to parse config from both environment variables and volume mounts. The order of which is first a set of sane default values which include `gsqlite3`.
+
+Then the volume mount and environment variables. In that order.
+
+That means if you set an environment variable it will always supersede the `defaults` and the `volume mount`
+
+### Environment variable example
 
 **Docker env:** `ENV_LOCAL_ADDRESS=0.0.0.0` or `ENV_LOCAL_ADDRESS: 0.0.0.0`
 
@@ -43,8 +55,7 @@ First set the `EXEC_MODE` to `ENV` (Default)
 
 ### Mounted volume example
 
-First set the `EXEC_MODE` to `VOL`
-Save the below config to a file and mount to `/etc/powerdns/pdns.conf`
+Save the below config to a file and mount to `/pdns.conf`
 
 ```
 primary=yes
