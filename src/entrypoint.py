@@ -42,10 +42,12 @@ def gpgsql():
                                            'gpgsql')
     wait_for_db()
     install()  # Install fresh db only if it does not exists.
-    if Config.pdns_mode == "primary":
+    if Config.pdns_conf.get('primary') == 'yes' or Config.pdns_conf.get(
+            'master') == 'yes':
         migrate(sql_update_schemas_path, gen_pdns_version())
 
-    elif Config.pdns_mode == "secondary":
+    elif Config.pdns_conf.get('secondary') == 'yes' or Config.pdns_conf.get(
+            'slave') == 'yes':
         autosecondary_sql = os.path.join(Config.sql_schema_path,
                                          "update_supermaster.pgsql.sql")
         log.debug(f"Autosecondary SQL path: {autosecondary_sql}")
@@ -63,10 +65,12 @@ def gsqlite3():
     sql_update_schemas_path = os.path.join(Config.sql_update_schemas_path,
                                            'gsqlite3')
     install()  # Install fresh db only if it does not exists.
-    if Config.pdns_mode == "primary":
+    if Config.pdns_conf.get('primary') == 'yes' or Config.pdns_conf.get(
+            'master') == 'yes':
         migrate(sql_update_schemas_path, gen_pdns_version())
 
-    elif Config.pdns_mode == "secondary":
+    elif Config.pdns_conf.get('secondary') == 'yes' or Config.pdns_conf.get(
+            'slave') == 'yes':
         autosecondary_sql = os.path.join(Config.sql_schema_path,
                                          "update_supermaster.sqlite3.sql")
         log.debug(f"Autosecondary SQL path: {autosecondary_sql}")

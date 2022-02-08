@@ -7,3 +7,4 @@ test.py
 .DS_Store
 dev
 pdns.conf
+mergetest.py

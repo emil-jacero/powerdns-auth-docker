@@ -46,6 +46,9 @@ def get_from_file(file):
 def merge_dicts(defaults_dict, dict_list):
     for dict in dict_list:
         defaults_dict.update(dict)
+    if "gpgsql-dbname" in defaults_dict:  # TODO: Extend with more databases
+        defaults_dict.pop('gsqlite3-database', None)
+        defaults_dict.pop('gsqlite3-pragma-synchronous', None)
     return defaults_dict
 
 
@@ -54,8 +57,6 @@ class Config:
     exec_mode = os.environ['EXEC_MODE']  # DOCKER or K8S
 
     # Default pdns config as dict
-    ## "gsqlite3-database": "/var/lib/powerdns/auth.db",
-    ## "gsqlite3-pragma-synchronous": 0,
     defaults = {
         "setuid": 101,
         "setgid": 101,
@@ -63,6 +64,7 @@ class Config:
         "secondary": "no",
         "launch": "gsqlite3",
         "gsqlite3-database": "/var/lib/powerdns/auth.db",
+        "gsqlite3-pragma-synchronous": 0,
         "local-address": "0.0.0.0",
         "local-port": "53",
     }
