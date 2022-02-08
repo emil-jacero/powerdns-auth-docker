@@ -16,15 +16,15 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 renderer = Template()
 
 # Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
-# log.debug(json.dumps(Config.enviroment, indent=2))
-# log.debug(json.dumps(Config.autosecondary, indent=2))
+log.debug(json.dumps(Config.pdns_conf, indent=2))
+log.debug(json.dumps(Config.autosecondary, indent=2))
 
-# Log the configuration
-if os.getenv('LOG_LEVEL') == "DEBUG":
-    log.debug("------------------------------------------")
-    for line in open("/etc/powerdns/pdns.conf"):
-        log.debug(line.strip())
-    log.debug("------------------------------------------")
+# # Log the configuration
+# if os.getenv('LOG_LEVEL') == "DEBUG":
+#     log.debug("------------------------------------------")
+#     for line in open("/etc/powerdns/pdns.conf"):
+#         log.debug(line.strip())
+#     log.debug("------------------------------------------")
 
 
 def gen_pdns_version():
@@ -77,28 +77,18 @@ def gsqlite3():
         migrate(sql_update_schemas_path, gen_pdns_version())
 
 
-if Config.exec_mode == "ENV":
-    if "gpgsql" in Config.enviroment['launch']:
-        gpgsql()
-    elif "gsqlite3" in Config.enviroment['launch']:
-        gsqlite3()
-    else:
-        log.error("No backend discovered")
-        sys.exit(1)
+if "gpgsql" in Config.pdns_conf['launch']:
+    gpgsql()
+elif "gsqlite3" in Config.pdns_conf['launch']:
+    gsqlite3()
+else:
+    log.error("No backend discovered")
+    sys.exit(1)
 
-    # Write configuration files
-    template = os.path.join(Config.template_path, "pdns.conf.j2")
-    renderer.render_template(template=template,
-                             output_file="/etc/powerdns/pdns.conf")
-
-elif Config.exec_mode == "VOL":
-    if "gpgsql" in Config.pdns_config['launch']:
-        gpgsql()
-    elif "gsqlite3" in Config.pdns_config['launch']:
-        gsqlite3()
-    else:
-        log.error("No backend discovered")
-        sys.exit(1)
+# Write PowerDNS configuration
+template = os.path.join(Config.template_path, "pdns.conf.j2")
+renderer.render_template(template=template,
+                         output_file="/etc/powerdns/pdns.conf")
 
 # Launch PowerDNS
 command1 = [

@@ -10,7 +10,7 @@ def parse_sql_schema_filename(filename):
     return old_version, new_verion
 
 
-def get_environment(env_search_term="ENV"):
+def get_from_environment(env_search_term="ENV"):
     enviroment = {}
     autosecondary = {}
     for k, v in os.environ.items():
@@ -27,15 +27,13 @@ def get_environment(env_search_term="ENV"):
     return enviroment, autosecondary
 
 
-def parse_pdns_config(file):
+def get_from_file(file):
     conf_list = []
     pdns_config = {}
     try:
         f = open(file, "r")
         conf_list = list(map(lambda s: s.strip(), f))
         conf_list = [x for x in conf_list if x]
-        if os.getenv('LOG_LEVEL') == "DEBUG":
-            print(conf_list)
         for line in conf_list:
             split_line = line.split("=")
             obj = {split_line[0]: split_line[1]}
@@ -45,68 +43,57 @@ def parse_pdns_config(file):
     return pdns_config
 
 
+def merge_dicts(defaults_dict, dict_list):
+    for dict in dict_list:
+        defaults_dict.update(dict)
+    return defaults_dict
+
+
 class Config:
-    enviroment, autosecondary = get_environment("ENV")
-
-    # EXECUTION MODE
     powerdns_app_version = os.environ['POWERDNS_VERSION']
-    exec_mode = os.environ['EXEC_MODE']
-    if exec_mode == "VOL":
-        pdns_config = {}
-        pdns_config = parse_pdns_config("/etc/powerdns/pdns.conf")
-        if not pdns_config:
-            sys.exit(1)
-        # PostgreSQL
-        gpgsql_dbname = pdns_config.get('gpgsql-dbname')
-        gpgsql_user = pdns_config.get('gpgsql-user')
-        gpgsql_password = pdns_config.get('gpgsql-password')
-        gpgsql_host = pdns_config.get('gpgsql-host')
-        gpgsql_port = pdns_config.get('gpgsql-port')
-        if int(powerdns_app_version) >= 45:
-            if pdns_config.get("primary") == "yes":
-                pdns_mode = "primary"
-            elif pdns_config.get("secondary") == "yes":
-                pdns_mode = "secondary"
-            else:
-                pdns_mode = None
-        else:
-            if pdns_config.get("master") == "yes":
-                pdns_mode = "primary"
-            elif pdns_config.get("slave") == "yes":
-                pdns_mode = "secondary"
-            else:
-                pdns_mode = None
+    exec_mode = os.environ['EXEC_MODE']  # DOCKER or K8S
 
-    elif exec_mode == "ENV":
-        # PostgreSQL
-        gpgsql_dbname = enviroment.get('gpgsql-dbname')
-        gpgsql_user = enviroment.get('gpgsql-user')
-        gpgsql_password = enviroment.get('gpgsql-password')
-        gpgsql_host = enviroment.get('gpgsql-host')
-        gpgsql_port = enviroment.get('gpgsql-port')
-        if int(powerdns_app_version) >= 45:
-            if enviroment.get("primary") == "yes":
-                pdns_mode = "primary"
-            elif enviroment.get("secondary") == "yes":
-                pdns_mode = "secondary"
-            else:
-                pdns_mode = None
-        else:
-            if enviroment.get("master") == "yes":
-                pdns_mode = "primary"
-            elif enviroment.get("slave") == "yes":
-                pdns_mode = "secondary"
-            else:
-                pdns_mode = None
+    # Default pdns config as dict
+    ## "gsqlite3-database": "/var/lib/powerdns/auth.db",
+    ## "gsqlite3-pragma-synchronous": 0,
+    defaults = {
+        "setuid": 101,
+        "setgid": 101,
+        "primary": "yes",
+        "secondary": "no",
+        "launch": "gsqlite3",
+        "gsqlite3-database": "/var/lib/powerdns/auth.db",
+        "local-address": "0.0.0.0",
+        "local-port": "53",
+    }
+
+    # Read config from file (/pdns.conf) and parse to dict
+    file_conf = get_from_file("/pdns.conf")
+
+    # Read config from Environment variables (ENV_) and parse to dict
+    env_conf, autosecondary = get_from_environment("ENV")
+
+    # Merge all configs in this specific order. Higher number higher priority
+    # 1. Defaults
+    # 2. File
+    # 3. Environment variables
+    pdns_conf = merge_dicts(defaults, [file_conf, env_conf])
+
+    # Set database config
+    ## PostgreSQL
+    gpgsql_dbname = pdns_conf.get('gpgsql-dbname')
+    gpgsql_user = pdns_conf.get('gpgsql-user')
+    gpgsql_password = pdns_conf.get('gpgsql-password')
+    gpgsql_host = pdns_conf.get('gpgsql-host')
+    gpgsql_port = pdns_conf.get('gpgsql-port')
+    ## SQLite
+    gsqlite3_path = pdns_conf.get('gsqlite3-database')
 
     # PATHS
     base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     sql_schema_path = os.path.join(base_dir, 'sql_schemas')
     sql_update_schemas_path = os.path.join(base_dir, 'sql_update_schemas')
     template_path = os.path.join(base_dir, 'templates')
-
-    # SQLite
-    gsqlite3_db_path = '/var/lib/powerdns/auth.db'
 
     # LOGGING
     logger_name = 'pdns_auth'

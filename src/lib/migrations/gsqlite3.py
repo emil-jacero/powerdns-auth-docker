@@ -23,7 +23,7 @@ class DB:
     def __init__(self):
         self.log_name = f"{log_name}.{self.__class__.__name__}"
         self.log = logging.getLogger(self.log_name)
-        self.db = Config.gsqlite3_db_path
+        self.db = Config.gsqlite3_path
 
         self.conn_obj = None
         self.cursor_obj = None
@@ -173,10 +173,10 @@ def install():
     """
         Creates new DB if it does not exist. Also populates it with an empty schema if it does not exist
     """
-    Path(Config.gsqlite3_db_path).touch()
+    Path(Config.gsqlite3_path).touch()
     conn = None
     try:
-        conn = sqlite3.connect(Config.gsqlite3_db_path)
+        conn = sqlite3.connect(Config.gsqlite3_path)
         log.info(f"SQLite version: {sqlite3.version}")
 
     except sqlite3.Error as e:

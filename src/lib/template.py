@@ -11,7 +11,7 @@ class Template:
         self.log = logging.getLogger(self.log_name)
         self.path = None
         self.name = None
-        self.enviroment = Config.enviroment
+        self.enviroment = Config.pdns_conf
         self.autosecondary = Config.autosecondary
 
     def render_template(self, template, output_file):
