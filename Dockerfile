@@ -39,7 +39,7 @@ RUN pip3 install -r requirements.txt
 RUN rm -rf /etc/powerdns
 RUN mkdir -p /etc/powerdns/pdns.d
 RUN chown -R 101:101 /etc/powerdns
-RUN chmod -r 755 /etc/powerdns
+RUN chmod 755 /etc/powerdns
 RUN mkdir -p /var/run/pdns && chown -R 101:101 /var/run/pdns
 
 # Add src
