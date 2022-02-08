@@ -13,10 +13,6 @@ ENV POWERDNS_VERSION=$PDNS_VERSION
 ENV LOG_LEVEL=INFO
 ENV EXEC_MODE=DOCKER
 
-# Group and User for PowerDNS
-#RUN groupadd -g 101 pdns
-#RUN useradd -u 101 -g 101 -md /app -s /bin/bash pdns
-
 # Install and upgrade
 #RUN apt update && apt -y install tzdata
 RUN apt update && apt install -y tzdata ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip python3-psycopg2 && apt -y upgrade
@@ -37,9 +33,7 @@ RUN pip3 install -r requirements.txt
 
 # Prepare directories for PowerDNS
 RUN rm -rf /etc/powerdns
-RUN mkdir -p /etc/powerdns/pdns.d
-RUN chown -R 101:101 /etc/powerdns
-RUN chmod 755 /etc/powerdns
+RUN mkdir -p /etc/powerdns/pdns.d && chown -R 101:101 /etc/powerdns && chmod 755 /etc/powerdns
 RUN mkdir -p /var/run/pdns && chown -R 101:101 /var/run/pdns
 
 # Add src
