@@ -65,6 +65,7 @@ class Config:
         "launch": "gsqlite3",
         "gsqlite3-database": "/var/lib/powerdns/auth.db",
         "gsqlite3-pragma-synchronous": 0,
+        "socket-dir": "/var/run/powerdns-authorative",
         "local-address": "0.0.0.0",
         "local-port": "53",
     }

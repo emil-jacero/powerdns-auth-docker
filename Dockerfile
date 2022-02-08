@@ -34,7 +34,7 @@ RUN pip3 install -r requirements.txt
 # Prepare directories for PowerDNS
 RUN rm -rf /etc/powerdns
 RUN mkdir -p /etc/powerdns/pdns.d && chown -R 101:101 /etc/powerdns && chmod 755 /etc/powerdns
-RUN mkdir -p /var/run/pdns && chown -R 101:101 /var/run/pdns
+RUN mkdir -p /var/run/powerdns-authorative && chown -R 101:101 /var/run/powerdns-authorative
 
 # Add src
 ADD src /app
