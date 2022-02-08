@@ -151,7 +151,8 @@ def wait_for_db(timeout=30):
                            user=Config.gpgsql_user,
                            password=Config.gpgsql_password) is False:
         if time.time() < time_end:
-            log.error('Could not connect to the database')
+            #log.error('Could not connect to the database')
+            pass
 
         # Print message if more than 5 seconds has passed
         if time.time() // 5 > loop:
