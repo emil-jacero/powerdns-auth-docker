@@ -14,8 +14,8 @@ ENV LOG_LEVEL=INFO
 ENV EXEC_MODE=DOCKER
 
 # Group and User for PowerDNS
-RUN groupadd -g 101 pdns
-RUN useradd -u 101 -g 101 -md /app -s /bin/bash pdns
+#RUN groupadd -g 101 pdns
+#RUN useradd -u 101 -g 101 -md /app -s /bin/bash pdns
 
 # Install and upgrade
 #RUN apt update && apt -y install tzdata
