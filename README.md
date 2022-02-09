@@ -35,23 +35,17 @@ This image provides various versions that are available via tags. `latest` tag p
 
 ## Configuration
 
-You configure using environment variables or as a mounted volume. The environment variable will be converted to the nameing scheme PowerDNS is using.
+This container is designed to parse config from both environment variables and volume mount. The order of which is first a set of sane default values which include `gsqlite3`.
 
-The mounted volume MUST be mounted at `/pdns.conf`
+Defaults -> mounted config -> environment variables
 
-### Configuration parsing order
-
-This container is designed to parse config from both environment variables and volume mounts. The order of which is first a set of sane default values which include `gsqlite3`.
-
-Then the volume mount and environment variables. In that order.
-
-That means if you set an environment variable it will always supersede the `defaults` and the `volume mount`
+Environment variables will always overwerite the rest
 
 ### Environment variable example
 
-**Docker env:** `ENV_LOCAL_ADDRESS=0.0.0.0` or `ENV_LOCAL_ADDRESS: 0.0.0.0`
+Docker env: `ENV_LOCAL_ADDRESS=0.0.0.0` or `ENV_LOCAL_ADDRESS: 0.0.0.0`
 
-**PDNS config:** `local-address=0.0.0.0`
+PDNS config: `local-address=0.0.0.0`
 
 ### Mounted volume example
 
@@ -93,8 +87,15 @@ local-port=53
 | `ENV_LAUNCH` | [Docs](https://doc.powerdns.com/authoritative/settings.html#launch) | `gsqlite3` |
 | `ENV_GSQLITE3_DATABASE` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-sqlite3.html) | `"/var/lib/powerdns/auth.db"` |
 | `ENV_GSQLITE3_PRAGMA_SYNCHRONOUS` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-sqlite3.html) | `0` |
+| `ENV_SOCKET_DIR` | [Docs](https://doc.powerdns.com/authoritative/settings.html#socket-dir) | `"/var/run/powerdns-authorative"` |
 | `ENV_LOCAL_ADDRESS` | [Docs](https://doc.powerdns.com/authoritative/settings.html#local-address) | `"0.0.0.0"` |
 | `ENV_LOCAL_PORT` | [Docs](https://doc.powerdns.com/authoritative/settings.html#local-port) | `53` |
+| `ENV_GPGSQL_HOST` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-postgresql.html#gpgsql-host) | `N/A` |
+| `ENV_GPGSQL_PORT` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-postgresql.html#gpgsql-port) | `N/A` |
+| `ENV_GPGSQL_DBNAME` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-postgresql.html#gpgsql-dbname) | `N/A` |
+| `ENV_GPGSQL_USER` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-postgresql.html#gpgsql-user) | `N/A` |
+| `ENV_GPGSQL_PASSWORD` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-postgresql.html#gpgsql-password) | `N/A` |
+| `ENV_GPGSQL_DNSSEC` | [Docs](https://doc.powerdns.com/authoritative/backends/generic-postgresql.html#gpgsql-dnssec) | `N/A` |
 
 ## Database support
 
@@ -104,6 +105,8 @@ local-port=53
 ## Examples
 
 ### Single authoritative primary with SQLite
+
+Using network_mode `host`
 
 ```
 version: '3'
@@ -120,6 +123,46 @@ services:
       ENV_LAUNCH: gsqlite3
       ENV_GSQLITE3_DATABASE: "/var/lib/powerdns/auth.db"
       ENV_GSQLITE3_PRAGMA_SYNCHRONOUS: 0
+      ENV_ENTROPY_SOURCE: /dev/urandom
+      ENV_LOCAL_ADDRESS: 192.168.100.20
+      ENV_LOCAL_PORT: 53
+    volumes:
+      - ./db:/var/lib/powerdns
+```
+
+### Single authoritative primary with PostgresSQL
+
+Using network_mode `host`
+
+```
+version: '3'
+services:
+  pdns-db:
+    container_name: pdns-db
+    image: postgres:14
+    restart: always
+    network_mode: host
+    environment:
+      POSTGRES_USER: pdns
+      POSTGRES_PASSWORD: CHANGEME
+      POSTGRES_DB: pdns
+
+  pdns-auth:
+    container_name: pdns-auth
+    image: emiljacero/powerdns-auth-docker:amd64-latest
+    restart: always
+    network_mode: host
+    environment:
+      TZ: Etc/UTC
+      ENV_PRIMARY: "yes"
+      ENV_SECONDARY: "no"
+      ENV_LAUNCH: gpgsql
+      ENV_GPGSQL_HOST: 127.0.0.1
+      ENV_GPGSQL_PORT: 5432
+      ENV_GPGSQL_DBNAME: pdns
+      ENV_GPGSQL_USER: pdns
+      ENV_GPGSQL_PASSWORD: CHANGEME
+      ENV_GPGSQL_DNSSEC: "yes"
       ENV_ENTROPY_SOURCE: /dev/urandom
       ENV_LOCAL_ADDRESS: 192.168.100.20
       ENV_LOCAL_PORT: 53
@@ -160,6 +203,8 @@ services:
 ### Single authoritative secondary with SQLite and PowerDNS recursor
 
 Please note that the authoritative server is listening on 5300. That means notifications has to be sent towards `192.168.100.20:5300`.
+
+Using network_mode `host`
 
 ```
 version: '3'
