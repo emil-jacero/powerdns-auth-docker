@@ -63,13 +63,6 @@ local-port=53
 
 ---
 
-## Required environment variables
-
-| Name | Value | Default |
-| :----: | --- | --- |
-| `TZ` | Timezone | `Etc/UTC` |
-| `EXEC_MODE` | Configuring with Environment variables or config file? (`ENV` or `VOL`) | `ENV` |
-
 ## Required environment variables for secondaries
 
 | Name | Value | Default |
