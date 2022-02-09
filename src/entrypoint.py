@@ -15,6 +15,17 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 # Init
 renderer = Template()
 
+# Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
+log.debug(json.dumps(Config.pdns_conf, indent=2))
+log.debug(json.dumps(Config.autosecondary, indent=2))
+
+# # Log the configuration
+# if os.getenv('LOG_LEVEL') == "DEBUG":
+#     log.debug("------------------------------------------")
+#     for line in open("/etc/powerdns/pdns.conf"):
+#         log.debug(line.strip())
+#     log.debug("------------------------------------------")
+
 
 def gen_pdns_version():
     result = None
@@ -31,10 +42,12 @@ def gpgsql():
                                            'gpgsql')
     wait_for_db()
     install()  # Install fresh db only if it does not exists.
-    if Config.pdns_mode == "primary":
+    if Config.pdns_conf.get('primary') == 'yes' or Config.pdns_conf.get(
+            'master') == 'yes':
         migrate(sql_update_schemas_path, gen_pdns_version())
 
-    elif Config.pdns_mode == "secondary":
+    elif Config.pdns_conf.get('secondary') == 'yes' or Config.pdns_conf.get(
+            'slave') == 'yes':
         autosecondary_sql = os.path.join(Config.sql_schema_path,
                                          "update_supermaster.pgsql.sql")
         log.debug(f"Autosecondary SQL path: {autosecondary_sql}")
@@ -52,10 +65,12 @@ def gsqlite3():
     sql_update_schemas_path = os.path.join(Config.sql_update_schemas_path,
                                            'gsqlite3')
     install()  # Install fresh db only if it does not exists.
-    if Config.pdns_mode == "primary":
+    if Config.pdns_conf.get('primary') == 'yes' or Config.pdns_conf.get(
+            'master') == 'yes':
         migrate(sql_update_schemas_path, gen_pdns_version())
 
-    elif Config.pdns_mode == "secondary":
+    elif Config.pdns_conf.get('secondary') == 'yes' or Config.pdns_conf.get(
+            'slave') == 'yes':
         autosecondary_sql = os.path.join(Config.sql_schema_path,
                                          "update_supermaster.sqlite3.sql")
         log.debug(f"Autosecondary SQL path: {autosecondary_sql}")
@@ -66,39 +81,18 @@ def gsqlite3():
         migrate(sql_update_schemas_path, gen_pdns_version())
 
 
-if Config.exec_mode == "ENV":
-    if "gpgsql" in Config.enviroment['launch']:
-        gpgsql()
-    elif "gsqlite3" in Config.enviroment['launch']:
-        gsqlite3()
-    else:
-        log.error("No backend discovered")
-        sys.exit(1)
+if "gpgsql" in Config.pdns_conf['launch']:
+    gpgsql()
+elif "gsqlite3" in Config.pdns_conf['launch']:
+    gsqlite3()
+else:
+    log.error("No backend discovered")
+    sys.exit(1)
 
-    # Write configuration files
-    template = os.path.join(Config.template_path, "pdns.conf.j2")
-    renderer.render_template(template=template,
-                             output_file="/etc/powerdns/pdns.conf")
-
-elif Config.exec_mode == "VOL":
-    if "gpgsql" in Config.pdns_config['launch']:
-        gpgsql()
-    elif "gsqlite3" in Config.pdns_config['launch']:
-        gsqlite3()
-    else:
-        log.error("No backend discovered")
-        sys.exit(1)
-
-# Log the configuration for debuging. OBS! The password is visible. Do not run in a production environment
-# log.debug(json.dumps(Config.enviroment, indent=2))
-# log.debug(json.dumps(Config.autosecondary, indent=2))
-
-# Log the configuration
-if os.getenv('LOG_LEVEL') == "DEBUG":
-    log.debug("------------------------------------------")
-    for line in open("/etc/powerdns/pdns.conf"):
-        log.debug(line.strip())
-    log.debug("------------------------------------------")
+# Write PowerDNS configuration
+template = os.path.join(Config.template_path, "pdns.conf.j2")
+renderer.render_template(template=template,
+                         output_file="/etc/powerdns/pdns.conf")
 
 # Launch PowerDNS
 command1 = [

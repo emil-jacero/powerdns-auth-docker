@@ -4,27 +4,18 @@ LABEL maintainer="emil@jacero.se"
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
-# Create build arguments with sane defaults
-ARG PDNS_VERSION=44
-
-RUN apt update && apt -y install tzdata
-RUN apt install -y ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip python3-psycopg2 && apt -y upgrade
+# Build arguments with sane defaults
+ARG PDNS_VERSION=45
 
 # NOTE: DO NOT OVERWRITE THIS VARIABLE... EVER!
 ENV POWERDNS_VERSION=$PDNS_VERSION
 # Sane defaults
 ENV LOG_LEVEL=INFO
-ENV EXEC_MODE=ENV
-ENV ENV_SETUID=101
-ENV ENV_SETGID=101
-ENV ENV_PRIMARY="yes"
-ENV ENV_SECONDARY="no"
-ENV ENV_LAUNCH="gsqlite3"
-ENV ENV_GSQLITE3_DATABASE="/var/lib/powerdns/auth.db"
-ENV ENV_GSQLITE3_PRAGMA_SYNCHRONOUS=0
-ENV ENV_LOCAL_ADDRESS="0.0.0.0"
-ENV ENV_LOCAL_PORT=53
+ENV EXEC_MODE=DOCKER
 
+# Install and upgrade
+#RUN apt update && apt -y install tzdata
+RUN apt update && apt install -y tzdata ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip python3-psycopg2 && apt -y upgrade
 RUN touch /etc/apt/sources.list.d/pdns.list && echo deb [arch=amd64] http://repo.powerdns.com/ubuntu focal-auth-$PDNS_VERSION main > /etc/apt/sources.list.d/pdns.list
 RUN echo "Package: pdns-*" >> /etc/apt/preferences.d/pdns && \
     echo "Pin: origin repo.powerdns.com" >> /etc/apt/preferences.d/pdns && \
@@ -32,20 +23,24 @@ RUN echo "Package: pdns-*" >> /etc/apt/preferences.d/pdns && \
 RUN curl -fsSL https://repo.powerdns.com/FD380FBB-pub.asc | apt-key add - && apt-get update
 RUN apt -y install pdns-server pdns-backend-pgsql pdns-backend-sqlite3 postgresql-client
 
+# Set Timezone
+ENV TZ=Etc/UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Installing python modules
 ADD requirements.txt /
 RUN pip3 install -r requirements.txt
 
-ENV TZ=Etc/UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Prepare directories for PowerDNS
+RUN rm -rf /etc/powerdns
+RUN mkdir -p /etc/powerdns/pdns.d && chown -R 101:101 /etc/powerdns && chmod 755 /etc/powerdns
+RUN mkdir -p /var/run/powerdns-authorative && chown -R 101:101 /var/run/powerdns-authorative
 
-RUN rm -rf /etc/powerdns/*
-RUN mkdir /etc/powerdns/pdns.d && chmod 755 /etc/powerdns/pdns.d
-
+# Add src
 ADD src /app
-
-EXPOSE 53/tcp 53/udp 8001/tcp
+RUN chown -R 101:101 /app
 
 USER 101:101
+EXPOSE 53/tcp 53/udp 8001/tcp
 WORKDIR /app
 ENTRYPOINT /app/entrypoint.py

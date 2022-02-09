@@ -145,21 +145,17 @@ def db_connect_check(user, password, host, port):
 
 def wait_for_db(timeout=30):
     time_end = time.time() + timeout
-    loop = time.time() // 5
     while db_connect_check(host=Config.gpgsql_host,
                            port=Config.gpgsql_port,
                            user=Config.gpgsql_user,
                            password=Config.gpgsql_password) is False:
-        if time.time() < time_end:
+        if time.time() > time_end:
             log.error('Could not connect to the database')
             sys.exit(1)
-
-        # Print message if more than 5 seconds has passed
-        if time.time() // 5 > loop:
-            log.info(
-                f"Waiting for postgres at: {Config.gpgsql_host}:{Config.gpgsql_port}"
-            )
-            loop = time.time() // 5
+        log.info(
+            f"Waiting for postgres at: {Config.gpgsql_host}:{Config.gpgsql_port}"
+        )
+        time.sleep(5)
 
 
 def has_existing_data(table_name):
