@@ -97,7 +97,7 @@ local-port=53
 
 Using network_mode `host`
 
-```
+```yaml
 version: '3'
 services:
   pdns-auth:
@@ -123,7 +123,7 @@ services:
 
 Using network_mode `host`
 
-```
+```yaml
 version: '3'
 services:
   pdns-db:
@@ -155,15 +155,13 @@ services:
       ENV_ENTROPY_SOURCE: /dev/urandom
       ENV_LOCAL_ADDRESS: 192.168.100.20
       ENV_LOCAL_PORT: 53
-    volumes:
-      - ./db:/var/lib/powerdns
 ```
 
 ### Single authoritative secondary with SQLite
 
 Running a secondary authoritative requires the extra environment variables beginning with `AUTOSECONDARY`.
 
-```
+```yaml
 version: '3'
 services:
   pdns-auth:
@@ -195,7 +193,7 @@ Please note that the authoritative server is listening on 5300. That means notif
 
 Using network_mode `host`
 
-```
+```yaml
 version: '3'
 services:
   pdns-auth:

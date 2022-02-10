@@ -66,6 +66,7 @@ class Config:
         "gsqlite3-database": "/var/lib/powerdns/auth.db",
         "gsqlite3-pragma-synchronous": 0,
         "socket-dir": "/var/run/powerdns-authorative",
+        "entropy-source": "/dev/urandom",
         "local-address": "0.0.0.0",
         "local-port": "53",
     }
