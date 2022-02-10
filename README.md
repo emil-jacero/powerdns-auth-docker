@@ -19,10 +19,6 @@ The images are built and tested on multiple platforms.
 | arm64 |
 | armv7l |
 
-## Tag naming scheme
-
-asdasd
-
 ## Latest tags
 
 This image provides various versions that are available via tags. `latest` tag provides the latest stable version.
