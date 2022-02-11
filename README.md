@@ -233,17 +233,8 @@ services:
       ENV_HINT_FILE: /var/named.root
       ENV_INCLUDE_DIR: /etc/powerdns/recursor.d
       ENV_FORWARD_ZONES_FILE: /etc/powerdns/forward.conf
-      ENV_ENTROPY_SOURCE: /dev/urandom
-      ENV_SOCKET_DIR: /var/run/powerdns-recursor
-      ENV_SOCKET_MODE: 660
       ENV_LOCAL_ADDRESS: 192.168.100.20
       ENV_LOCAL_PORT: 53
-      ENV_USE_INCOMING_EDNS_SUBNET: "yes"
-      ENV_ECS_IPV4_BITS: 32
-      ENV_ECS_IPV6_BITS: 128
-      ENV_QUIET: "yes"
-      ENV_SETGID: pdns
-      ENV_SETUID: pdns
       ENV_DNSSEC: "off"
       ENV_WEBSERVER: "yes"
       ENV_WEBSERVER_PASSWORD: CHANGEME_PASSWORD

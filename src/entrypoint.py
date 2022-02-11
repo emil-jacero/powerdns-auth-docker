@@ -19,13 +19,6 @@ renderer = Template()
 log.debug(json.dumps(Config.pdns_conf, indent=2))
 log.debug(json.dumps(Config.autosecondary, indent=2))
 
-# # Log the configuration
-# if os.getenv('LOG_LEVEL') == "DEBUG":
-#     log.debug("------------------------------------------")
-#     for line in open("/etc/powerdns/pdns.conf"):
-#         log.debug(line.strip())
-#     log.debug("------------------------------------------")
-
 
 def gen_pdns_version():
     result = None

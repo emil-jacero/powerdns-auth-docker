@@ -15,7 +15,7 @@ ENV EXEC_MODE=DOCKER
 
 # Install and upgrade
 #RUN apt update && apt -y install tzdata
-RUN apt update && apt install -y tzdata ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip python3-psycopg2 && apt -y upgrade
+RUN apt update && apt install -y tzdata ca-certificates curl wget gnupg2 jq dnsutils python3 python3-pip python3-psycopg2 vim && apt -y upgrade
 RUN touch /etc/apt/sources.list.d/pdns.list && echo deb [arch=amd64] http://repo.powerdns.com/ubuntu focal-auth-$PDNS_VERSION main > /etc/apt/sources.list.d/pdns.list
 RUN echo "Package: pdns-*" >> /etc/apt/preferences.d/pdns && \
     echo "Pin: origin repo.powerdns.com" >> /etc/apt/preferences.d/pdns && \
