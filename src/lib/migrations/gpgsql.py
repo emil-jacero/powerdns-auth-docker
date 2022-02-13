@@ -134,13 +134,16 @@ def bump_pdns_db_version(new_version, old_version):
 
 
 def db_connect_check(user, password, host, port):
+    conn = None
     try:
         conn_string = f"host={host} port={port} user={user} password={password} connect_timeout=1"
         conn = psycopg2.connect(conn_string)
-        conn.close()
         return True
     except:
         return False
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def wait_for_db(timeout=30):
@@ -188,7 +191,6 @@ def install():
         Creates new DB if it does not exist. Also populates it with an empty schema if it does not exist
     """
     if not has_existing_data("records"):
-        #wait_for_db
         log.info("Install fresh database")
         execute_sql_schema(sql_schema)
         execute_sql_schema(create_metadata_table)

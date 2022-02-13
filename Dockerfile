@@ -43,4 +43,5 @@ RUN chown -R 101:101 /app
 USER 101:101
 EXPOSE 53/tcp 53/udp 8001/tcp
 WORKDIR /app
+STOPSIGNAL SIGTERM
 ENTRYPOINT /app/entrypoint.py
