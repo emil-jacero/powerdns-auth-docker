@@ -38,7 +38,7 @@ RUN mkdir -p /var/run/powerdns-authorative && chown -R 101:101 /var/run/powerdns
 
 # Add src
 ADD src /app
-RUN chown -R 101:101 /app
+RUN chown -R 101:101 /app; touch /pdns.conf && chown -R 101:101 /pdns.conf
 
 USER 101:101
 EXPOSE 53/tcp 53/udp 8001/tcp
