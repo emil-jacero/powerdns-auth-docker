@@ -4,6 +4,8 @@ import os
 import sys
 import subprocess
 import json
+import ipaddress
+import socket
 
 from lib.logger import logger as log
 from lib.config import Config
@@ -27,6 +29,12 @@ def gen_pdns_version():
     return result
 
 
+def get_ipv4_by_hostname(hostname):
+    return list(i[4][0] for i in socket.getaddrinfo(hostname, 0)
+                if i[0] is socket.AddressFamily.AF_INET
+                and i[1] is socket.SocketKind.SOCK_RAW)
+
+
 def gpgsql():
     from lib.migrations.gpgsql import install, migrate, execute_sql_schema, wait_for_db
 
@@ -41,6 +49,21 @@ def gpgsql():
 
     elif Config.pdns_conf.get('secondary') == 'yes' or Config.pdns_conf.get(
             'slave') == 'yes':
+        try:
+            ip_from_env = ipaddress.ip_address(
+                Config.autosecondary.get('AUTOSECONDARY_IP'))
+            log.debug("AUTOSECONDARY_IP is a correct IP")
+        except ValueError:
+            log.debug("AUTOSECONDARY_IP is NOT a correct IP")
+            try:
+                resolved_ip = get_ipv4_by_hostname(
+                    Config.autosecondary.get('AUTOSECONDARY_IP'))
+                Config.autosecondary.update(
+                    {'AUTOSECONDARY_IP': f'{resolved_ip}'})
+            except:
+                log.error(
+                    f"Unable to resolve {Config.autosecondary.get('AUTOSECONDARY_IP')}"
+                )
         autosecondary_sql = os.path.join(Config.sql_schema_path,
                                          "update_supermaster.pgsql.sql")
         log.debug(f"Autosecondary SQL path: {autosecondary_sql}")
@@ -64,6 +87,21 @@ def gsqlite3():
 
     elif Config.pdns_conf.get('secondary') == 'yes' or Config.pdns_conf.get(
             'slave') == 'yes':
+        try:
+            ip_from_env = ipaddress.ip_address(
+                Config.autosecondary.get('AUTOSECONDARY_IP'))
+            log.debug("AUTOSECONDARY_IP is a correct IP")
+        except ValueError:
+            log.debug("AUTOSECONDARY_IP is NOT a correct IP")
+            try:
+                resolved_ip = get_ipv4_by_hostname(
+                    Config.autosecondary.get('AUTOSECONDARY_IP'))
+                Config.autosecondary.update(
+                    {'AUTOSECONDARY_IP': f'{resolved_ip}'})
+            except:
+                log.error(
+                    f"Unable to resolve {Config.autosecondary.get('AUTOSECONDARY_IP')}"
+                )
         autosecondary_sql = os.path.join(Config.sql_schema_path,
                                          "update_supermaster.sqlite3.sql")
         log.debug(f"Autosecondary SQL path: {autosecondary_sql}")
