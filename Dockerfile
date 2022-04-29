@@ -41,7 +41,7 @@ RUN rm -rf /etc/powerdns; \
 ADD src /app
 RUN chown -R 101:101 /app; touch /pdns.conf && chown -R 101:101 /pdns.conf
 
-USER 101:101
+# USER 101:101  # Disabled to allow CAP_NET_BIND_SERVICE
 EXPOSE 53/tcp 53/udp 8001/tcp
 WORKDIR /app
 STOPSIGNAL SIGTERM
